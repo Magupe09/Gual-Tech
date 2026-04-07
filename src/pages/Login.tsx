@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, isDemoMode } from '../services/supabase'
+import logoImage from '../assets/logojavi.PNG'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -40,20 +41,34 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg-dark p-4">
-      <div className="card w-full max-w-md">
+    <div 
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '24px',
+        backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(${logoImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <div style={{ width: '100%', maxWidth: '480px', backgroundColor: '#ffffff', borderRadius: '12px', padding: '32px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)' }}>
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary flex items-center justify-center">
-            <span className="text-4xl font-bold text-white">J</span>
-          </div>
-          <h1 className="text-2xl font-bold text-white">Javi Control</h1>
-          <p className="text-text-muted mt-2">Gestión de Máquinas Industriales</p>
+          <img 
+            src={logoImage} 
+            alt="Javi Control" 
+            className="w-32 h-32 mx-auto mb-4 object-contain"
+          />
+          <h1 className="text-2xl font-bold" style={{ color: '#532D8C' }}>Javi Control</h1>
+          <p className="text-sm mt-2" style={{ color: '#7B5CC9' }}>Gestión de Máquinas Industriales</p>
         </div>
 
         {/* Demo Mode Banner */}
         {isDemoMode && (
-          <div className="mb-4 p-3 bg-yellow-500/20 border border-yellow-500 rounded-lg text-yellow-400 text-sm text-center">
+          <div className="mb-4 p-3 bg-yellow-500/20 border border-yellow-500 rounded-lg text-yellow-600 text-sm text-center">
             Modo Demo - Clickea "Iniciar Sesión" para ver la app
           </div>
         )}
@@ -61,7 +76,7 @@ export default function Login() {
         {/* Form */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Email</label>
+            <label className="block text-sm font-medium mb-2" style={{ color: '#532D8C' }}>Email</label>
             <input
               type="email"
               value={email}
@@ -74,7 +89,7 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Contraseña</label>
+            <label className="block text-sm font-medium mb-2" style={{ color: '#532D8C' }}>Contraseña</label>
             <input
               type="password"
               value={password}
@@ -87,7 +102,7 @@ export default function Login() {
           </div>
 
           {error && (
-            <div className="p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-400 text-sm">
+            <div className="p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-600 text-sm">
               {error}
             </div>
           )}
@@ -96,6 +111,7 @@ export default function Login() {
             type="submit"
             disabled={loading}
             className="btn-primary w-full"
+            style={{ backgroundColor: '#532D8C', color: '#ffffff' }}
           >
             {loading ? 'Iniciando...' : 'Iniciar Sesión'}
           </button>
