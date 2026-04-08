@@ -85,134 +85,134 @@ export default function MachineDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg-dark flex items-center justify-center">
-        <div className="text-white text-xl">Cargando...</div>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+        <div style={{ color: '#532D8C', fontSize: '20px' }}>Cargando...</div>
       </div>
     )
   }
 
   if (!machine) {
     return (
-      <div className="min-h-screen bg-bg-dark flex items-center justify-center">
-        <div className="text-white text-xl">Máquina no encontrada</div>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+        <div style={{ color: '#dc2626', fontSize: '20px' }}>Máquina no encontrada</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-bg-dark p-6">
-      <div className="max-w-4xl mx-auto">
+    <div style={{ padding: '24px' }}>
+      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/dashboard')} className="btn-secondary p-2">
-              <ArrowLeft size={20} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button onClick={() => navigate('/dashboard')} style={{ padding: '8px', backgroundColor: 'transparent', border: '1px solid #532D8C', borderRadius: '8px', cursor: 'pointer' }}>
+              <ArrowLeft size={20} style={{ color: '#532D8C' }} />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-white">{machine.reference}</h1>
-              <p className="text-text-muted">{machine.name}</p>
+              <h1 style={{ color: '#532D8C', fontSize: '24px', fontWeight: 'bold' }}>{machine.reference}</h1>
+              <p style={{ color: '#666666', fontSize: '14px' }}>{machine.name}</p>
             </div>
           </div>
-          <Link to={`/machine/${id}/add-report`} className="btn-primary flex items-center gap-2">
+          <Link to={`/machine/${id}/add-report`} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', backgroundColor: '#532D8C', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: '600', textDecoration: 'none' }}>
             <Plus size={20} />
             Nuevo Informe
           </Link>
         </div>
 
         {/* Machine Info */}
-        <div className="card mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white">Información de la Máquina</h2>
-            <div className={`px-3 py-1 rounded-full text-white text-sm ${getStatusColor(machine.status)}`}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #532D8C', borderRadius: '12px', padding: '24px', marginBottom: '32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h2 style={{ color: '#532D8C', fontSize: '20px', fontWeight: 'bold' }}>Información de la Máquina</h2>
+            <span style={{ padding: '4px 12px', borderRadius: '20px', fontSize: '14px', color: '#ffffff', backgroundColor: machine.status === 'activo' ? '#16a34a' : machine.status === 'inactivo' ? '#dc2626' : '#ca8a04' }}>
               {machine.status.toUpperCase()}
-            </div>
+            </span>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4" style={{ color: '#1a1a1a' }}>
             <div>
-              <p className="text-text-muted text-sm">Número de Serie</p>
-              <p className="text-white font-medium">{machine.serial_number}</p>
+              <p style={{ color: '#666666', fontSize: '14px' }}>Número de Serie</p>
+              <p style={{ color: '#1a1a1a', fontWeight: '500', fontSize: '16px' }}>{machine.serial_number}</p>
             </div>
             <div>
-              <p className="text-text-muted text-sm">Marca</p>
-              <p className="text-white font-medium">{machine.brand || '-'}</p>
+              <p style={{ color: '#666666', fontSize: '14px' }}>Marca</p>
+              <p style={{ color: '#1a1a1a', fontWeight: '500', fontSize: '16px' }}>{machine.brand || '-'}</p>
             </div>
             <div>
-              <p className="text-text-muted text-sm">Modelo</p>
-              <p className="text-white font-medium">{machine.model || '-'}</p>
+              <p style={{ color: '#666666', fontSize: '14px' }}>Modelo</p>
+              <p style={{ color: '#1a1a1a', fontWeight: '500', fontSize: '16px' }}>{machine.model || '-'}</p>
             </div>
             <div>
-              <p className="text-text-muted text-sm">Año</p>
-              <p className="text-white font-medium">{machine.year || '-'}</p>
+              <p style={{ color: '#666666', fontSize: '14px' }}>Año</p>
+              <p style={{ color: '#1a1a1a', fontWeight: '500', fontSize: '16px' }}>{machine.year || '-'}</p>
             </div>
-            <div className="col-span-2">
-              <p className="text-text-muted text-sm">Ubicación</p>
-              <p className="text-white font-medium">{machine.location || '-'}</p>
+            <div style={{ gridColumn: 'span 2' }}>
+              <p style={{ color: '#666666', fontSize: '14px' }}>Ubicación</p>
+              <p style={{ color: '#1a1a1a', fontWeight: '500', fontSize: '16px' }}>{machine.location || '-'}</p>
             </div>
           </div>
         </div>
 
         {/* Reports History */}
-        <div className="card">
-          <h2 className="text-xl font-bold text-white mb-6">Historial de Informes</h2>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #532D8C', borderRadius: '12px', padding: '24px' }}>
+          <h2 style={{ color: '#532D8C', fontSize: '20px', fontWeight: 'bold', marginBottom: '24px' }}>Historial de Informes</h2>
           
           {reports.length === 0 ? (
-            <div className="text-center py-8 text-text-muted">
-              <FileText size={48} className="mx-auto mb-4 opacity-50" />
-              <p>No hay informes registrados</p>
-              <Link to={`/machine/${id}/add-report`} className="text-accent hover:underline mt-2 inline-block">
+            <div style={{ textAlign: 'center', padding: '32px 0', color: '#666666' }}>
+              <FileText size={48} style={{ margin: '0 auto 16px', opacity: 0.5, color: '#532D8C' }} />
+              <p style={{ marginBottom: '8px' }}>No hay informes registrados</p>
+              <Link to={`/machine/${id}/add-report`} style={{ color: '#532D8C', textDecoration: 'underline' }}>
                 Crear el primer informe
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {reports.map(report => (
-                <div key={report.id} className="p-4 bg-surface-light rounded-lg">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <span className={`px-2 py-1 rounded text-xs text-white ${getMaintenanceTypeColor(report.maintenance_type)}`}>
+                <div key={report.id} style={{ padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '12px', color: '#ffffff', backgroundColor: report.maintenance_type === 'preventivo' ? '#16a34a' : report.maintenance_type === 'correctivo' ? '#dc2626' : '#7B5CC9' }}>
                         {report.maintenance_type}
                       </span>
-                      <span className="text-text-muted text-sm flex items-center gap-1">
+                      <span style={{ color: '#666666', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Calendar size={14} />
                         {new Date(report.report_date).toLocaleDateString('es-ES')}
                       </span>
                     </div>
                     {report.cost > 0 && (
-                      <span className="text-white font-medium">${report.cost.toFixed(2)}</span>
+                      <span style={{ color: '#1a1a1a', fontWeight: '500' }}>${report.cost.toFixed(2)}</span>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center gap-2 text-text-muted">
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', fontSize: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#666666' }}>
                       <User size={14} />
-                      <span>{report.technician}</span>
+                      <span style={{ color: '#1a1a1a' }}>{report.technician}</span>
                     </div>
                     {report.parts_changed && report.parts_changed.length > 0 && (
-                      <div className="flex items-center gap-2 text-text-muted">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#666666' }}>
                         <Package size={14} />
-                        <span>{report.parts_changed.length} pieza(s)</span>
+                        <span style={{ color: '#1a1a1a' }}>{report.parts_changed.length} pieza(s)</span>
                       </div>
                     )}
                   </div>
 
                   {report.notes && (
-                    <p className="text-text-muted text-sm mt-3 border-t border-primary pt-3">
+                    <p style={{ color: '#666666', fontSize: '14px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #532D8C' }}>
                       {report.notes}
                     </p>
                   )}
 
                   {report.photos && report.photos.length > 0 && (
-                    <div className="flex gap-2 mt-3">
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
                       {report.photos.map((photo, idx) => (
                         <a
                           key={idx}
                           href={photo}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-16 h-16 rounded overflow-hidden border border-primary"
+                          style={{ width: '64px', height: '64px', borderRadius: '4px', overflow: 'hidden', border: '1px solid #532D8C' }}
                         >
-                          <img src={photo} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                          <img src={photo} alt={`Foto ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </a>
                       ))}
                     </div>
