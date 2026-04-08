@@ -206,7 +206,7 @@ export default function Dashboard() {
                   justifyContent: 'space-between',
                   alignItems: isMobile ? 'flex-start' : 'center',
                   padding: isMobile ? '12px' : '16px',
-                  backgroundColor: '#f5f5f5', 
+                  backgroundColor: '#ffffff', 
                   border: '1px solid #532D8C',
                   borderRadius: '8px',
                   flexDirection: isMobile ? 'column' : 'row',
@@ -216,13 +216,13 @@ export default function Dashboard() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: getStatusColor(machine.status).replace('bg-', '').replace('-500', '') === 'green' ? '#16a34a' : getStatusColor(machine.status).replace('bg-', '').replace('-500', '') === 'yellow' ? '#ca8a04' : getStatusColor(machine.status).replace('bg-', '').replace('-500', '') === 'red' ? '#dc2626' : '#666666' }} />
                   <div>
-                    <p style={{ color: '#1a1a1a', fontWeight: '600', fontSize: isMobile ? '14px' : '16px' }}>{machine.reference}</p>
-                    <p style={{ color: '#666666', fontSize: isMobile ? '12px' : '14px' }}>{machine.name}</p>
-                    <p style={{ color: '#666666', fontSize: isMobile ? '11px' : '12px' }}>{machine.serial_number}</p>
+                    <p style={{ color: '#532D8C', fontWeight: '600', fontSize: isMobile ? '14px' : '16px' }}>{machine.reference}</p>
+                    <p style={{ color: '#1a1a1a', fontSize: isMobile ? '12px' : '14px' }}>{machine.name}</p>
+                    <p style={{ color: '#666666', fontSize: isMobile ? '11px' : '12px' }}>N/S: {machine.serial_number}</p>
                   </div>
                 </div>
                 <div style={{ textAlign: isMobile ? 'left' : 'right' }}>
-                  <p style={{ color: '#666666', fontSize: isMobile ? '12px' : '14px' }}>{machine.brand} {machine.model}</p>
+                  <p style={{ color: '#1a1a1a', fontSize: isMobile ? '12px' : '14px' }}>{machine.brand} {machine.model}</p>
                   <p style={{ color: '#666666', fontSize: isMobile ? '12px' : '14px' }}>{machine.location}</p>
                 </div>
               </Link>
