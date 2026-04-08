@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, isDemoMode } from '../services/supabase'
-import logoImage from '../assets/logojavi.PNG'
 
 // Custom hook for responsive designs
 function useMediaQuery(query: string) {
@@ -68,7 +67,7 @@ export default function Login() {
         justifyContent: 'center',
         alignItems: 'center',
         padding: isMobile ? '16px' : '24px',
-        backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(${logoImage})`,
+        backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(/logojavi.PNG)`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
@@ -85,7 +84,7 @@ export default function Login() {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: isMobile ? '24px' : '32px' }}>
           <img 
-            src={logoImage} 
+            src="/logojavi.PNG" 
             alt="Javi Control" 
             style={{ width: isMobile ? '80px' : '128px', height: isMobile ? '80px' : '128px', objectFit: 'contain', marginBottom: '16px' }}
           />

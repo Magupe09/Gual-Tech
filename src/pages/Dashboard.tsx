@@ -4,7 +4,6 @@ import { Plus, Search, LogOut } from 'lucide-react'
 import { supabase, isDemoMode } from '../services/supabase'
 import { demoMachines } from '../services/demoData'
 import { Machine } from '../types'
-import logoImage from '../assets/logojavi.PNG'
 
 // Custom hook for responsive designs
 function useMediaQuery(query: string) {
@@ -109,7 +108,7 @@ export default function Dashboard() {
         gap: isMobile ? '12px' : '0'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img src={logoImage} alt="Javi Control" style={{ width: isMobile ? '36px' : '48px', height: isMobile ? '36px' : '48px', objectFit: 'contain' }} />
+          <img src="/logojavi.PNG" alt="Javi Control" style={{ width: isMobile ? '36px' : '48px', height: isMobile ? '36px' : '48px', objectFit: 'contain' }} />
           <div>
             <h1 style={{ color: '#532D8C', fontSize: isMobile ? '18px' : '24px', fontWeight: 'bold' }}>Javi Control</h1>
             <p style={{ color: '#666666', fontSize: isMobile ? '12px' : '14px' }}>Gestión de Máquinas</p>
