@@ -3,8 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Download, X, Image, Loader } from 'lucide-react'
 import imageCompression from 'browser-image-compression'
 import { jsPDF } from 'jspdf'
-import { supabase, isDemoMode } from '../services/supabase'
-import { demoMachines, demoReports } from '../services/demoData'
+import { supabase } from '../services/supabase'
 import { Machine, ReportFormData } from '../types'
 
 export default function AddReport() {
@@ -35,13 +34,6 @@ export default function AddReport() {
 
   const fetchMachine = async () => {
     try {
-      if (isDemoMode || !supabase) {
-        await new Promise(resolve => setTimeout(resolve, 200))
-        const found = demoMachines.find(m => m.id === id)
-        setMachine(found || null)
-        return
-      }
-
       const { data, error } = await supabase
         .from('machines')
         .select('*')
@@ -218,12 +210,8 @@ export default function AddReport() {
       let photoUrls: string[] = []
       
       if (formData.photos.length > 0) {
-        if (isDemoMode || !supabase) {
-          photoUrls = photosPreview
-        } else {
-          setUploading(true)
-          photoUrls = await uploadPhotos()
-        }
+        setUploading(true)
+        photoUrls = await uploadPhotos()
       }
 
       const reportData = {
@@ -238,37 +226,25 @@ export default function AddReport() {
         created_at: new Date().toISOString()
       }
 
-      if (isDemoMode || !supabase) {
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        if (!demoReports[id || '']) {
-          demoReports[id || ''] = []
-        }
-        demoReports[id || ''].push({
-          ...reportData,
-          id: Date.now().toString()
-        } as any)
-      } else {
-        const doc = generatePDF()
-        const pdfBlob = doc.output('blob')
-        const pdfFileName = `${id}/${Date.now()}-informe.pdf`
-        
-        const { error: pdfError } = await supabase.storage
-          .from('machine-pdfs')
-          .upload(pdfFileName, pdfBlob)
+      const doc = generatePDF()
+      const pdfBlob = doc.output('blob')
+      const pdfFileName = `${id}/${Date.now()}-informe.pdf`
+      
+      const { error: pdfError } = await supabase.storage
+        .from('machine-pdfs')
+        .upload(pdfFileName, pdfBlob)
 
-        if (pdfError) throw pdfError
+      if (pdfError) throw pdfError
 
-        const { data: { publicUrl: pdfUrl } } = supabase.storage
-          .from('machine-pdfs')
-          .getPublicUrl(pdfFileName)
+      const { data: { publicUrl: pdfUrl } } = supabase.storage
+        .from('machine-pdfs')
+        .getPublicUrl(pdfFileName)
 
-        const { error: insertError } = await supabase
-          .from('reports')
-          .insert([{ ...reportData, pdf_url: pdfUrl }])
+      const { error: insertError } = await supabase
+        .from('reports')
+        .insert([{ ...reportData, pdf_url: pdfUrl }])
 
-        if (insertError) throw insertError
-      }
+      if (insertError) throw insertError
 
       handleDownloadPDF()
       navigate(`/machine/${id}`)

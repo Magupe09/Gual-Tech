@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Plus, FileText, Calendar, User, Package } from 'lucide-react'
-import { supabase, isDemoMode } from '../services/supabase'
-import { demoMachines, demoReports } from '../services/demoData'
+import { supabase } from '../services/supabase'
 import { Machine, Report } from '../types'
 
 export default function MachineDetail() {
@@ -21,14 +20,6 @@ export default function MachineDetail() {
 
   const fetchMachine = async () => {
     try {
-      if (isDemoMode || !supabase) {
-        await new Promise(resolve => setTimeout(resolve, 200))
-        const found = demoMachines.find(m => m.id === id)
-        setMachine(found || null)
-        setLoading(false)
-        return
-      }
-
       const { data, error } = await supabase
         .from('machines')
         .select('*')
@@ -46,12 +37,6 @@ export default function MachineDetail() {
 
   const fetchReports = async () => {
     try {
-      if (isDemoMode || !supabase) {
-        await new Promise(resolve => setTimeout(resolve, 200))
-        setReports(demoReports[id || ''] || [])
-        return
-      }
-
       const { data, error } = await supabase
         .from('reports')
         .select('*')

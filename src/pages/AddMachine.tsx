@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
-import { supabase, isDemoMode } from '../services/supabase'
-import { demoMachines } from '../services/demoData'
+import { supabase } from '../services/supabase'
 import { MachineFormData } from '../types'
 
 export default function AddMachine() {
@@ -35,21 +34,6 @@ export default function AddMachine() {
     setError('')
 
     try {
-      // Modo demo
-      if (isDemoMode || !supabase) {
-        await new Promise(resolve => setTimeout(resolve, 500))
-        const newMachine = {
-          ...formData,
-          id: Date.now().toString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-        demoMachines.push(newMachine as any)
-        navigate(`/machine/${newMachine.id}`)
-        return
-      }
-
-      // Modo real
       const { data, error: supabaseError } = await supabase
         .from('machines')
         .insert([formData])

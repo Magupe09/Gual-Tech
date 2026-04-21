@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase, isDemoMode } from '../services/supabase'
+import { supabase } from '../services/supabase'
 
 // Custom hook for responsive designs
 function useMediaQuery(query: string) {
@@ -35,15 +35,6 @@ export default function Login() {
     setError('')
 
     try {
-      // Modo demo - siempre permite acceso
-      if (isDemoMode || !supabase) {
-        // Simular delay para UX
-        await new Promise(resolve => setTimeout(resolve, 500))
-        navigate('/dashboard')
-        return
-      }
-
-      // Modo real - usar Supabase
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -92,13 +83,6 @@ export default function Login() {
           <p style={{ color: '#7B5CC9', fontSize: isMobile ? '12px' : '14px', marginTop: '8px' }}>Gestión de Máquinas</p>
         </div>
 
-        {/* Demo Mode Banner */}
-        {isDemoMode && (
-          <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#fef3c7', border: '1px solid #f59e0b', borderRadius: '8px', textAlign: 'center', color: '#92400e', fontSize: isMobile ? '12px' : '14px' }}>
-            Modo Demo - Click 「Iniciar Sesión」 para ver la app
-          </div>
-        )}
-
         {/* Form */}
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
@@ -109,8 +93,7 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #532D8C', backgroundColor: '#ffffff', color: '#1a1a1a', fontSize: isMobile ? '14px' : '16px' }}
               placeholder="tu@email.com"
-              required={!isDemoMode}
-              disabled={isDemoMode}
+              required
             />
           </div>
 
@@ -122,8 +105,7 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #532D8C', backgroundColor: '#ffffff', color: '#1a1a1a', fontSize: isMobile ? '14px' : '16px' }}
               placeholder="••••••••"
-              required={!isDemoMode}
-              disabled={isDemoMode}
+              required
             />
           </div>
 
