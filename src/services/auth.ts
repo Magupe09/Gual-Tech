@@ -1,12 +1,12 @@
 import { supabase } from './supabase'
 
 /**
- * EMAIL AUTORIZADO
+ * EMAILS AUTORIZADOS
  * 
- * Este es el único email que puede registrarse en la app.
- * Cambiar aquí si necesitás agregar más usuarios en el futuro.
+ * Lista de emails que pueden registrarse en la app.
+ * Cambiar aquí si necesitás agregar o remover usuarios.
  */
-const AUTHORIZED_EMAIL = ['maonvacation@gmail.com', 'yaudy77@gmail.com']
+const AUTHORIZED_EMAILS = ['maonvacation@gmail.com', 'yaudy77@gmail.com']
 
 /**
  * VALIDAR EMAIL AUTORIZADO
@@ -20,7 +20,9 @@ const AUTHORIZED_EMAIL = ['maonvacation@gmail.com', 'yaudy77@gmail.com']
  * @returns true si el email está autorizado
  */
 export function isAuthorizedEmail(email: string): boolean {
-  return email.toLowerCase().trim() === AUTHORIZED_EMAIL.toLowerCase()
+  return AUTHORIZED_EMAILS.some(auth => 
+    email.toLowerCase().trim() === auth.toLowerCase()
+  )
 }
 
 /**
@@ -40,7 +42,7 @@ export async function signup(email: string, password: string) {
   if (!isAuthorizedEmail(email)) {
     throw new Error(
       `❌ El email ${email} no está autorizado. ` +
-      `Solo ${AUTHORIZED_EMAIL} puede registrarse.`
+      `Emails permitidos: ${AUTHORIZED_EMAILS.join(', ')}`
     )
   }
 
