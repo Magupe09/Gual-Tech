@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { login } from '../services/auth'
+import { signup } from '../services/auth'
 
 // Custom hook for responsive designs
 function useMediaQuery(query: string) {
@@ -19,26 +19,59 @@ function useMediaQuery(query: string) {
   return matches
 }
 
-export default function Login() {
+export default function Signup() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const navigate = useNavigate()
   
   // Responsive
   const isMobile = useMediaQuery('(max-width: 767px)')
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccess('')
+
+    // Validaciones básicas
+    if (!email.trim()) {
+      setError('El email es requerido')
+      setLoading(false)
+      return
+    }
+
+    if (!password.trim()) {
+      setError('La contraseña es requerida')
+      setLoading(false)
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden')
+      setLoading(false)
+      return
+    }
+
+    if (password.length < 8) {
+      setError('La contraseña debe tener mínimo 8 caracteres')
+      setLoading(false)
+      return
+    }
 
     try {
-      await login(email, password)
-      navigate('/dashboard')
+      await signup(email, password)
+      setSuccess('✅ Cuenta creada exitosamente. Redirigiendo al dashboard...')
+      
+      // Redirigir después de 2 segundos para que vea el mensaje
+      setTimeout(() => {
+        navigate('/dashboard')
+      }, 2000)
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al iniciar sesión'
+      const errorMessage = err instanceof Error ? err.message : 'Error al registrarse'
       setError(errorMessage)
     } finally {
       setLoading(false)
@@ -75,21 +108,24 @@ export default function Login() {
             style={{ width: isMobile ? '80px' : '128px', height: isMobile ? '80px' : '128px', objectFit: 'contain', marginBottom: '16px' }}
           />
           <h1 style={{ color: '#532D8C', fontSize: isMobile ? '20px' : '24px', fontWeight: 'bold' }}>Javi Control</h1>
-          <p style={{ color: '#7B5CC9', fontSize: isMobile ? '12px' : '14px', marginTop: '8px' }}>Gestión de Máquinas</p>
+          <p style={{ color: '#7B5CC9', fontSize: isMobile ? '12px' : '14px', marginTop: '8px' }}>Crea tu cuenta</p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
             <label style={{ display: 'block', fontSize: isMobile ? '13px' : '14px', fontWeight: '500', marginBottom: '8px', color: '#532D8C' }}>Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #532D8C', backgroundColor: '#ffffff', color: '#1a1a1a', fontSize: isMobile ? '14px' : '16px' }}
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #532D8C', backgroundColor: '#ffffff', color: '#1a1a1a', fontSize: isMobile ? '14px' : '16px', boxSizing: 'border-box' }}
               placeholder="tu@email.com"
               required
             />
+            <p style={{ fontSize: '12px', color: '#7B5CC9', marginTop: '6px', fontStyle: 'italic' }}>
+              ℹ️ Solo ciertos emails están autorizados para registrarse
+            </p>
           </div>
 
           <div>
@@ -98,7 +134,22 @@ export default function Login() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #532D8C', backgroundColor: '#ffffff', color: '#1a1a1a', fontSize: isMobile ? '14px' : '16px' }}
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #532D8C', backgroundColor: '#ffffff', color: '#1a1a1a', fontSize: isMobile ? '14px' : '16px', boxSizing: 'border-box' }}
+              placeholder="••••••••"
+              required
+            />
+            <p style={{ fontSize: '12px', color: '#666', marginTop: '6px' }}>
+              Mínimo 8 caracteres
+            </p>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: isMobile ? '13px' : '14px', fontWeight: '500', marginBottom: '8px', color: '#532D8C' }}>Confirmar Contraseña</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #532D8C', backgroundColor: '#ffffff', color: '#1a1a1a', fontSize: isMobile ? '14px' : '16px', boxSizing: 'border-box' }}
               placeholder="••••••••"
               required
             />
@@ -107,6 +158,12 @@ export default function Login() {
           {error && (
             <div style={{ padding: '12px', backgroundColor: '#fee2e2', border: '1px solid #ef4444', borderRadius: '8px', color: '#dc2626', fontSize: isMobile ? '12px' : '14px' }}>
               {error}
+            </div>
+          )}
+
+          {success && (
+            <div style={{ padding: '12px', backgroundColor: '#dcfce7', border: '1px solid #22c55e', borderRadius: '8px', color: '#16a34a', fontSize: isMobile ? '12px' : '14px' }}>
+              {success}
             </div>
           )}
 
@@ -126,17 +183,17 @@ export default function Login() {
               opacity: loading ? 0.7 : 1
             }}
           >
-            {loading ? 'Iniciando...' : 'Iniciar Sesión'}
+            {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
           </button>
         </form>
 
-        {/* Signup Link */}
+        {/* Login Link */}
         <div style={{ marginTop: '24px', textAlign: 'center', borderTop: '1px solid #e5e7eb', paddingTop: '24px' }}>
           <p style={{ color: '#666', fontSize: isMobile ? '13px' : '14px', marginBottom: '12px' }}>
-            ¿No tenés cuenta?
+            ¿Ya tenés cuenta?
           </p>
           <Link 
-            to="/signup" 
+            to="/" 
             style={{ 
               display: 'inline-block',
               padding: '10px 20px', 
@@ -159,7 +216,7 @@ export default function Login() {
               e.currentTarget.style.color = '#532D8C'
             }}
           >
-            Crear Cuenta
+            Volver a Login
           </Link>
         </div>
       </div>

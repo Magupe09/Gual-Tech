@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, LogOut } from 'lucide-react'
 import { supabase } from '../services/supabase'
+import { logout } from '../services/auth'
 import { Machine } from '../types'
 
 // Custom hook for responsive designs
@@ -37,10 +38,12 @@ export default function Dashboard() {
   }, [])
 
   const handleLogout = async () => {
-    if (supabase) {
-      await supabase.auth.signOut()
+    try {
+      await logout()
+      navigate('/')
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error)
     }
-    navigate('/')
   }
 
   const fetchMachines = async () => {
