@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Plus, FileText, Calendar, User, Package } from 'lucide-react'
+import { ArrowLeft, Plus, FileText, Calendar, User, Package, Trash2 } from 'lucide-react'
 import { supabase } from '../services/supabase'
+import { deleteMachine, deleteReport } from '../services/database'
 import { Machine, Report } from '../types'
+import ConfirmModal from '../components/ConfirmModal'
+import ActionMenu from '../components/ActionMenu'
 
 export default function MachineDetail() {
   const { id } = useParams<{ id: string }>()
@@ -10,6 +13,12 @@ export default function MachineDetail() {
   const [machine, setMachine] = useState<Machine | null>(null)
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
+  
+  // Estados para modales
+  const [showDeleteMachineModal, setShowDeleteMachineModal] = useState(false)
+  const [showDeleteReportModal, setShowDeleteReportModal] = useState(false)
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -47,6 +56,45 @@ export default function MachineDetail() {
       setReports(data || [])
     } catch (error) {
       console.error('Error fetching reports:', error)
+    }
+  }
+
+  /**
+   * ELIMINAR MÁQUINA
+   * Borra la máquina y todos sus informes
+   */
+  const handleDeleteMachine = async () => {
+    if (!id) return
+    
+    setIsDeleting(true)
+    try {
+      await deleteMachine(id)
+      setShowDeleteMachineModal(false)
+      navigate('/dashboard')
+    } catch (error) {
+      console.error('Error eliminando máquina:', error)
+      alert('Error al eliminar la máquina')
+      setIsDeleting(false)
+    }
+  }
+
+  /**
+   * ELIMINAR INFORME
+   * Borra un informe específico
+   */
+  const handleDeleteReport = async (reportId: string) => {
+    setIsDeleting(true)
+    try {
+      await deleteReport(reportId)
+      setShowDeleteReportModal(false)
+      setSelectedReportId(null)
+      
+      // Actualizar lista de informes
+      setReports(reports.filter(r => r.id !== reportId))
+    } catch (error) {
+      console.error('Error eliminando informe:', error)
+      alert('Error al eliminar el informe')
+      setIsDeleting(false)
     }
   }
 
@@ -98,10 +146,37 @@ export default function MachineDetail() {
               <p style={{ color: '#666666', fontSize: '14px' }}>{machine.name}</p>
             </div>
           </div>
-          <Link to={`/machine/${id}/add-report`} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', backgroundColor: '#532D8C', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: '600', textDecoration: 'none' }}>
-            <Plus size={20} />
-            Nuevo Informe
-          </Link>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <Link to={`/machine/${id}/add-report`} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', backgroundColor: '#532D8C', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: '600', textDecoration: 'none' }}>
+              <Plus size={20} />
+              Nuevo Informe
+            </Link>
+            <button 
+              onClick={() => setShowDeleteMachineModal(true)}
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px', 
+                padding: '10px 20px', 
+                backgroundColor: '#dc2626', 
+                color: '#ffffff', 
+                border: 'none', 
+                borderRadius: '8px', 
+                fontWeight: '600', 
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#b91c1c'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#dc2626'
+              }}
+            >
+              <Trash2 size={20} />
+              Eliminar
+            </button>
+          </div>
         </div>
 
         {/* Machine Info */}
@@ -163,9 +238,17 @@ export default function MachineDetail() {
                         {new Date(report.report_date).toLocaleDateString('es-ES')}
                       </span>
                     </div>
-                    {report.cost > 0 && (
-                      <span style={{ color: '#1a1a1a', fontWeight: '500' }}>${report.cost.toFixed(2)}</span>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      {report.cost > 0 && (
+                        <span style={{ color: '#1a1a1a', fontWeight: '500' }}>${report.cost.toFixed(2)}</span>
+                      )}
+                      <ActionMenu 
+                        onDelete={() => {
+                          setSelectedReportId(report.id)
+                          setShowDeleteReportModal(true)
+                        }}
+                      />
+                    </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', fontSize: '14px' }}>
@@ -208,6 +291,39 @@ export default function MachineDetail() {
           )}
         </div>
       </div>
+
+      {/* Modal: Eliminar Máquina */}
+      <ConfirmModal
+        isOpen={showDeleteMachineModal}
+        title="Eliminar Máquina"
+        message={`¿Estás seguro que querés eliminar la máquina "${machine?.name}"? Esta acción eliminará también todos sus informes y no se puede deshacer.`}
+        confirmText="Eliminar Máquina"
+        cancelText="Cancelar"
+        isDangerous={true}
+        isLoading={isDeleting}
+        onConfirm={handleDeleteMachine}
+        onCancel={() => setShowDeleteMachineModal(false)}
+      />
+
+      {/* Modal: Eliminar Informe */}
+      <ConfirmModal
+        isOpen={showDeleteReportModal}
+        title="Eliminar Informe"
+        message="¿Estás seguro que querés eliminar este informe? No se puede deshacer."
+        confirmText="Eliminar Informe"
+        cancelText="Cancelar"
+        isDangerous={true}
+        isLoading={isDeleting}
+        onConfirm={() => {
+          if (selectedReportId) {
+            handleDeleteReport(selectedReportId)
+          }
+        }}
+        onCancel={() => {
+          setShowDeleteReportModal(false)
+          setSelectedReportId(null)
+        }}
+      />
     </div>
   )
 }
