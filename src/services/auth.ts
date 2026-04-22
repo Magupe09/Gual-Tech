@@ -6,7 +6,7 @@ import { supabase } from './supabase'
  * Este es el único email que puede registrarse en la app.
  * Cambiar aquí si necesitás agregar más usuarios en el futuro.
  */
-const AUTHORIZED_EMAIL = 'yaudy77@gmail.com'
+const AUTHORIZED_EMAIL = ['maonvacation@gmail.com', 'yaudy77@gmail.com']
 
 /**
  * VALIDAR EMAIL AUTORIZADO
