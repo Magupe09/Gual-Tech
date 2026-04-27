@@ -157,11 +157,6 @@ export default function AddReport() {
   const FOOTER_H = 22
   const CONTENT_W = (pw: number) => pw - MARGIN * 2
 
-  const drawPageBand = (doc: jsPDF, pageWidth: number, y: number, h: number, color: [number, number, number]) => {
-    doc.setFillColor(...color)
-    doc.rect(0, y, pageWidth, h, 'F')
-  }
-
   const drawFooter = (doc: jsPDF, pageWidth: number, pageHeight: number) => {
     const fy = pageHeight - FOOTER_H
     doc.setDrawColor(...PRIMARY_RGB)
@@ -174,10 +169,8 @@ export default function AddReport() {
 
   const drawSectionTitle = (doc: jsPDF, y: number, title: string, pageWidth: number) => {
     const cw = CONTENT_W(pageWidth)
-    // Línea horizontal fina
     doc.setDrawColor(220, 210, 235)
     doc.line(MARGIN, y, pageWidth - MARGIN, y)
-    // Título en color primario
     doc.setFontSize(11)
     doc.setTextColor(...PRIMARY_RGB)
     doc.setFont(FONT, BOLD)
@@ -207,9 +200,10 @@ export default function AddReport() {
     }
 
     // ==========================================
-    // Logo (cargar una vez)
+    // Logo (cargar una vez, mantener proporción)
     // ==========================================
     let logoBase64: string | null = null
+    let logoW = 0, logoH = 0
     try {
       const img = new window.Image()
       img.src = '/logojavi.PNG'
@@ -217,30 +211,49 @@ export default function AddReport() {
         img.onload = () => resolve()
         img.onerror = () => reject()
       })
+      // Render a resolución NATIVA (evitar pérdida)
+      const scale = 2 // retina para calidad
       const canvas = document.createElement('canvas')
-      canvas.width = img.width || 160
-      canvas.height = img.height || 60
+      canvas.width = (img.width || 160) * scale
+      canvas.height = (img.height || 60) * scale
       const ctx = canvas.getContext('2d')!
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
       logoBase64 = canvas.toDataURL('image/png')
+      logoW = img.width || 160
+      logoH = img.height || 60
     } catch {
       logoBase64 = null
     }
 
+    // Calcular tamaño del logo manteniendo proporción
+    const logoMaxH = 22
+    let logoPrintW = 50
+    let logoPrintH = logoMaxH
+    if (logoW > 0 && logoH > 0) {
+      const aspect = logoW / logoH
+      logoPrintW = logoMaxH * aspect
+      logoPrintH = logoMaxH
+    }
+    const logoX = MARGIN
+    const logoY = (HEADER_H - logoPrintH) / 2
+
     // ==========================================
     // drawHeader: se llama en cada página
     // ==========================================
-    const drawHeader = (firstPage = false) => {
-      // Banda púrpura completa
-      drawPageBand(doc, pageWidth, 0, HEADER_H, PRIMARY_RGB)
+    const drawHeader = () => {
+      // Banda púrpura con esquinas redondeadas (solo superior)
+      doc.setFillColor(...PRIMARY_RGB)
+      doc.roundedRect(0, 0, pageWidth, HEADER_H, 10, 10, 'F')
 
-      // Logo (blanco sobre fondo púrpura)
+      // Logo (blanco sobre fondo púrpura, con proporción)
       doc.setTextColor(255, 255, 255)
       if (logoBase64) {
-        doc.addImage(logoBase64, 'PNG', MARGIN, 12, 50, 18)
+        doc.addImage(logoBase64, 'PNG', logoX, logoY, logoPrintW, logoPrintH)
       } else {
         doc.setFontSize(14)
-        doc.text('Gualtech', MARGIN, 26)
+        doc.text('Gualtech', MARGIN, 28)
       }
 
       // Consecutivo + fecha a la derecha
@@ -252,7 +265,7 @@ export default function AddReport() {
     }
 
     // Dibujar primera página
-    drawHeader(true)
+    drawHeader()
     drawFooter(doc, pageWidth, pageHeight)
 
     // ==========================================
@@ -464,7 +477,6 @@ export default function AddReport() {
 
       if (insertError) throw insertError
 
-      handleDownloadPDF()
       navigate(`/machine/${id}`)
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al guardar el informe'
