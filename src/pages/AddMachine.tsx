@@ -15,16 +15,18 @@ export default function AddMachine() {
     name: '',
     brand: '',
     model: '',
-    year: new Date().getFullYear(),
     location: '',
-    status: 'activo'
+    cliente: '',
+    nit: '',
+    email: '',
+    telefono: ''
   })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'year' ? parseInt(value) || 0 : value
+      [name]: value
     }))
   }
 
@@ -135,42 +137,65 @@ export default function AddMachine() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Año de Fabricación</label>
+              <label className="block text-sm font-medium mb-2">Cliente *</label>
               <input
-                type="number"
-                name="year"
-                value={formData.year}
+                type="text"
+                name="cliente"
+                value={formData.cliente}
                 onChange={handleChange}
                 className="input-field"
-                min="1900"
-                max={new Date().getFullYear()}
+                placeholder="Nombre del cliente"
+                required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Ubicación</label>
+              <label className="block text-sm font-medium mb-2">NIT</label>
+              <input
+                type="text"
+                name="nit"
+                value={formData.nit}
+                onChange={handleChange}
+                className="input-field"
+                placeholder="ej. 123456789-0"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Dirección</label>
               <input
                 type="text"
                 name="location"
                 value={formData.location}
                 onChange={handleChange}
                 className="input-field"
-                placeholder="ej. Planta 1 - Línea A"
+                placeholder="Dirección de la máquina"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Estado</label>
-              <select
-                name="status"
-                value={formData.status}
+              <label className="block text-sm font-medium mb-2">E-mail *</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
                 onChange={handleChange}
                 className="input-field"
-              >
-                <option value="activo">Activo</option>
-                <option value="inactivo">Inactivo</option>
-                <option value="mantenimiento">En Mantenimiento</option>
-              </select>
+                placeholder="correo@ejemplo.com"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Teléfono</label>
+              <input
+                type="text"
+                name="telefono"
+                value={formData.telefono}
+                onChange={handleChange}
+                className="input-field"
+                placeholder="ej. +57 300 123 4567"
+              />
             </div>
           </div>
 

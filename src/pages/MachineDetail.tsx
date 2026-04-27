@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Plus, FileText, Calendar, User, Package, Trash2 } from 'lucide-react'
+import { ArrowLeft, Plus, FileText, Calendar, User, Package, Trash2, Download, Mail } from 'lucide-react'
 import { supabase } from '../services/supabase'
 import { deleteMachine, deleteReport } from '../services/database'
 import { Machine, Report } from '../types'
@@ -19,6 +19,12 @@ export default function MachineDetail() {
   const [showDeleteReportModal, setShowDeleteReportModal] = useState(false)
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  
+  // Estados para PIN de eliminación
+  const [showPinModal, setShowPinModal] = useState(false)
+  const [pinInput, setPinInput] = useState('')
+  const [pinError, setPinError] = useState('')
+  const [deletingReportId, setDeletingReportId] = useState<string | null>(null)
 
   useEffect(() => {
     if (id) {
@@ -79,8 +85,68 @@ export default function MachineDetail() {
   }
 
   /**
-   * ELIMINAR INFORME
-   * Borra un informe específico
+   * DESCARGAR PDF INFORME
+   * Abre el PDF en nueva pestaña
+   */
+  const handleDownloadReport = (report: Report) => {
+    if (report.pdf_url) {
+      window.open(report.pdf_url, '_blank')
+    }
+  }
+
+  /**
+   * ENVIAR INFORME POR EMAIL
+   * Abre el cliente de correo con datos pre-cargados
+   */
+  const handleEmailReport = (report: Report) => {
+    const subject = encodeURIComponent(`Informe de Mantenimiento - ${machine?.reference}`)
+    const body = encodeURIComponent(`Adjunto informe de mantenimiento para la máquina ${machine?.reference} - ${machine?.name}`)
+    const email = machine?.email || ''
+    window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank')
+  }
+
+  /**
+   * ABRIR MODAL PIN
+   * Prepara el modal de PIN para eliminar informe
+   */
+  const openPinModal = (reportId: string) => {
+    setDeletingReportId(reportId)
+    setPinInput('')
+    setPinError('')
+    setShowPinModal(true)
+  }
+
+  /**
+   * ELIMINAR CON PIN
+   * Valida el PIN de 4 dígitos antes de eliminar
+   */
+  const handleDeleteWithPin = async () => {
+    if (pinInput !== '0000') {
+      setPinError('Código incorrecto')
+      return
+    }
+    if (!deletingReportId) return
+
+    setIsDeleting(true)
+    try {
+      await deleteReport(deletingReportId)
+      setShowPinModal(false)
+      setDeletingReportId(null)
+      setPinInput('')
+      setPinError('')
+      
+      setReports(reports.filter(r => r.id !== deletingReportId))
+    } catch (error) {
+      console.error('Error eliminando informe:', error)
+      alert('Error al eliminar el informe')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  /**
+   * ELIMINAR INFORME (directo, sin PIN)
+   * Se mantiene por compatibilidad pero ya no se usa desde el menú
    */
   const handleDeleteReport = async (reportId: string) => {
     setIsDeleting(true)
@@ -181,11 +247,8 @@ export default function MachineDetail() {
 
         {/* Machine Info */}
         <div style={{ backgroundColor: '#ffffff', border: '1px solid #532D8C', borderRadius: '12px', padding: '24px', marginBottom: '32px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div style={{ marginBottom: '24px' }}>
             <h2 style={{ color: '#532D8C', fontSize: '20px', fontWeight: 'bold' }}>Información de la Máquina</h2>
-            <span style={{ padding: '4px 12px', borderRadius: '20px', fontSize: '14px', color: '#ffffff', backgroundColor: machine.status === 'activo' ? '#16a34a' : machine.status === 'inactivo' ? '#dc2626' : '#ca8a04' }}>
-              {machine.status.toUpperCase()}
-            </span>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4" style={{ color: '#1a1a1a' }}>
@@ -201,12 +264,8 @@ export default function MachineDetail() {
               <p style={{ color: '#666666', fontSize: '14px' }}>Modelo</p>
               <p style={{ color: '#1a1a1a', fontWeight: '500', fontSize: '16px' }}>{machine.model || '-'}</p>
             </div>
-            <div>
-              <p style={{ color: '#666666', fontSize: '14px' }}>Año</p>
-              <p style={{ color: '#1a1a1a', fontWeight: '500', fontSize: '16px' }}>{machine.year || '-'}</p>
-            </div>
             <div style={{ gridColumn: 'span 2' }}>
-              <p style={{ color: '#666666', fontSize: '14px' }}>Ubicación</p>
+              <p style={{ color: '#666666', fontSize: '14px' }}>Dirección</p>
               <p style={{ color: '#1a1a1a', fontWeight: '500', fontSize: '16px' }}>{machine.location || '-'}</p>
             </div>
           </div>
@@ -243,10 +302,9 @@ export default function MachineDetail() {
                         <span style={{ color: '#1a1a1a', fontWeight: '500' }}>${report.cost.toFixed(2)}</span>
                       )}
                       <ActionMenu 
-                        onDelete={() => {
-                          setSelectedReportId(report.id)
-                          setShowDeleteReportModal(true)
-                        }}
+                        onEmail={() => handleEmailReport(report)}
+                        onDownload={() => handleDownloadReport(report)}
+                        onDelete={() => openPinModal(report.id)}
                       />
                     </div>
                   </div>
@@ -324,6 +382,128 @@ export default function MachineDetail() {
           setSelectedReportId(null)
         }}
       />
+
+      {/* Modal: PIN de Seguridad */}
+      {showPinModal && (
+        <div
+          onClick={() => {
+            setShowPinModal(false)
+            setPinError('')
+          }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 999,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '12px',
+              padding: '32px',
+              maxWidth: '380px',
+              width: '90%',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+              zIndex: 1000,
+              textAlign: 'center'
+            }}
+          >
+            <h2 style={{ color: '#dc2626', fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>
+              Confirmar Eliminación
+            </h2>
+            <p style={{ color: '#666666', fontSize: '14px', marginBottom: '24px', lineHeight: '1.5' }}>
+              Ingresá el código de seguridad para eliminar el informe
+            </p>
+
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={4}
+              value={pinInput}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '')
+                setPinInput(val)
+                setPinError('')
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && pinInput.length === 4) {
+                  handleDeleteWithPin()
+                }
+              }}
+              placeholder="0000"
+              autoFocus
+              style={{
+                width: '160px',
+                padding: '12px',
+                fontSize: '28px',
+                textAlign: 'center',
+                letterSpacing: '12px',
+                border: `2px solid ${pinError ? '#dc2626' : '#d1d5db'}`,
+                borderRadius: '8px',
+                outline: 'none',
+                fontFamily: 'monospace',
+                marginBottom: pinError ? '8px' : '24px'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#532D8C'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = pinError ? '#dc2626' : '#d1d5db'
+              }}
+            />
+
+            {pinError && (
+              <p style={{ color: '#dc2626', fontSize: '13px', marginBottom: '16px' }}>
+                {pinError}
+              </p>
+            )}
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={() => {
+                  setShowPinModal(false)
+                  setPinError('')
+                  setPinInput('')
+                }}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#f0f0f0',
+                  color: '#1a1a1a',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteWithPin}
+                disabled={pinInput.length !== 4 || isDeleting}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: pinInput.length === 4 && !isDeleting ? '#dc2626' : '#d1d5db',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: pinInput.length === 4 && !isDeleting ? 'pointer' : 'not-allowed'
+                }}
+              >
+                {isDeleting ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -144,60 +144,181 @@ export default function AddReport() {
     return urls
   }
 
-  const generatePDF = (): jsPDF => {
+  const generatePDF = async (): Promise<jsPDF> => {
     const doc = new jsPDF()
     const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
 
-    doc.setFillColor(83, 45, 140)
-    doc.rect(0, 0, pageWidth, 30, 'F')
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(20)
-    doc.text('Javi Control', 14, 20)
-    
-    doc.setTextColor(0, 0, 0)
-    doc.setFontSize(16)
-    doc.text(`Informe de Mantenimiento`, 14, 45)
-    
-    doc.setFontSize(12)
-    doc.text(`Máquina: ${machine?.reference} - ${machine?.name}`, 14, 55)
-    doc.text(`Número de Serie: ${machine?.serial_number}`, 14, 62)
-    
-    doc.setFontSize(11)
-    doc.text(`Fecha: ${new Date(formData.report_date).toLocaleDateString('es-ES')}`, 14, 75)
-    doc.text(`Tipo: ${formData.maintenance_type}`, 14, 82)
-    doc.text(`Técnico: ${formData.technician}`, 14, 89)
-    
-    if (formData.cost > 0) {
-      doc.text(`Costo: $${formData.cost.toFixed(2)}`, 14, 96)
+    // Obtener consecutivo basado en informes existentes
+    let consecutivo = '001'
+    try {
+      const { count } = await supabase
+        .from('reports')
+        .select('*', { count: 'exact', head: true })
+        .eq('machine_id', id)
+      consecutivo = String((count || 0) + 1).padStart(3, '0')
+    } catch {
+      consecutivo = '001'
     }
-    
+
+    // ===== HEADER =====
+    // Logo a la izquierda
+    try {
+      const img = new window.Image()
+      img.src = '/logojavi.PNG'
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve()
+        img.onerror = () => reject()
+      })
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, 0, 0)
+      const logoBase64 = canvas.toDataURL('image/png')
+      doc.addImage(logoBase64, 'PNG', 14, 10, 40, 15)
+    } catch {
+      // Fallback si no carga el logo
+      doc.setFontSize(16)
+      doc.setTextColor(83, 45, 140)
+      doc.text('Gualtech', 14, 20)
+    }
+
+    // Consecutivo + fecha a la derecha
+    const creationDate = new Date().toLocaleDateString('es-ES')
+    doc.setFontSize(10)
+    doc.setTextColor(100, 100, 100)
+    doc.text(`No. ${consecutivo}`, pageWidth - 14, 15, { align: 'right' })
+    doc.text(`Fecha: ${creationDate}`, pageWidth - 14, 22, { align: 'right' })
+
+    // Línea separadora del header
+    doc.setDrawColor(83, 45, 140)
+    doc.line(14, 32, pageWidth - 14, 32)
+
+    // ===== TÍTULO =====
+    doc.setTextColor(83, 45, 140)
+    doc.setFontSize(18)
+    doc.text('Informe de Mantenimiento', pageWidth / 2, 44, { align: 'center' })
+
+    // ===== INFO DE MÁQUINA =====
+    doc.setTextColor(0, 0, 0)
+    doc.setFontSize(11)
+    doc.text(`Máquina: ${machine?.reference} - ${machine?.name}`, 14, 58)
+    doc.text(`Número de Serie: ${machine?.serial_number}`, 14, 65)
+    doc.text(`Marca: ${machine?.brand || '-'}  |  Modelo: ${machine?.model || '-'}`, 14, 72)
+
+    // Línea separadora
+    doc.setDrawColor(83, 45, 140)
+    doc.line(14, 80, pageWidth - 14, 80)
+
+    // ===== DATOS DEL INFORME =====
+    doc.setFontSize(12)
+    doc.setTextColor(83, 45, 140)
+    doc.text('Datos del Informe', 14, 90)
+
+    doc.setTextColor(0, 0, 0)
+    doc.setFontSize(10)
+    let currentY = 100
+    doc.text(`Fecha: ${new Date(formData.report_date).toLocaleDateString('es-ES')}`, 14, currentY)
+    currentY += 7
+    doc.text(`Tipo: ${formData.maintenance_type}`, 14, currentY)
+    currentY += 7
+    doc.text(`Técnico: ${formData.technician}`, 14, currentY)
+    currentY += 10
+
+    if (formData.cost > 0) {
+      doc.text(`Costo: $${formData.cost.toFixed(2)}`, 14, currentY)
+      currentY += 7
+    }
+
+    // ===== PIEZAS CAMBIADAS =====
     if (formData.parts_changed.length > 0) {
       doc.setFontSize(12)
-      doc.text('Piezas Cambiadas:', 14, 110)
+      doc.setTextColor(83, 45, 140)
+      doc.text('Piezas Cambiadas:', 14, currentY)
+      currentY += 7
+      doc.setTextColor(0, 0, 0)
       doc.setFontSize(10)
-      formData.parts_changed.forEach((part, idx) => {
-        doc.text(`• ${part}`, 14, 118 + (idx * 6))
+      formData.parts_changed.forEach((part) => {
+        doc.text(`• ${part}`, 20, currentY)
+        currentY += 6
       })
+      currentY += 5
     }
-    
+
+    // ===== NOTAS =====
     if (formData.notes) {
-      const notesY = 110 + (formData.parts_changed.length * 6) + 15
       doc.setFontSize(12)
-      doc.text('Notas:', 14, notesY)
+      doc.setTextColor(83, 45, 140)
+      doc.text('Notas:', 14, currentY)
+      currentY += 7
+      doc.setTextColor(0, 0, 0)
       doc.setFontSize(10)
-      const splitNotes = doc.splitTextToSize(formData.notes, 180)
-      doc.text(splitNotes, 14, notesY + 8)
+      const splitNotes = doc.splitTextToSize(formData.notes, pageWidth - 28)
+      doc.text(splitNotes, 14, currentY)
+      currentY += splitNotes.length * 5 + 5
     }
-    
+
+    // ===== FOTOS =====
+    if (photosPreview.length > 0) {
+      // Verificar espacio en página actual
+      if (currentY > pageHeight - 60) {
+        doc.addPage()
+        currentY = 20
+      }
+
+      doc.setFontSize(12)
+      doc.setTextColor(83, 45, 140)
+      doc.text('Fotografías:', 14, currentY)
+      currentY += 10
+
+      // Agregar fotos en grilla de 2 columnas
+      for (let i = 0; i < photosPreview.length; i++) {
+        // Nueva página si no hay espacio
+        if (currentY + 70 > pageHeight - 20) {
+          doc.addPage()
+          currentY = 20
+          doc.setFontSize(12)
+          doc.setTextColor(83, 45, 140)
+          doc.text('Fotografías (cont.):', 14, currentY)
+          currentY += 10
+        }
+
+        const col = i % 2
+        const row = Math.floor(i / 2)
+        const x = 14 + (col * ((pageWidth - 28) / 2 + 5))
+        const photoY = currentY + (row * 68)
+
+        try {
+          doc.addImage(photosPreview[i], 'JPEG', x, photoY, 80, 55)
+          doc.setFontSize(8)
+          doc.setTextColor(100, 100, 100)
+          doc.text(`Foto ${i + 1}`, x, photoY + 60)
+        } catch {
+          doc.setFontSize(8)
+          doc.setTextColor(100, 100, 100)
+          doc.text(`Foto ${i + 1}: No disponible`, x, photoY + 25)
+        }
+      }
+      
+      // Actualizar currentY después de las fotos
+      const fotoRows = Math.ceil(photosPreview.length / 2)
+      currentY = currentY + (fotoRows * 68)
+    }
+
+    // ===== FOOTER =====
+    doc.setDrawColor(83, 45, 140)
+    doc.line(14, pageHeight - 20, pageWidth - 14, pageHeight - 20)
     doc.setFontSize(8)
-    doc.setTextColor(128, 128, 128)
-    doc.text(`Generado el ${new Date().toLocaleDateString('es-ES')} por Javi Control`, 14, 280)
-    
+    doc.setTextColor(100, 100, 100)
+    doc.text(`Técnico: ${formData.technician}`, 14, pageHeight - 12)
+    doc.text(`Generado por Javi Control`, pageWidth - 14, pageHeight - 12, { align: 'right' })
+
     return doc
   }
 
-  const handleDownloadPDF = () => {
-    const doc = generatePDF()
+  const handleDownloadPDF = async () => {
+    const doc = await generatePDF()
     doc.save(`informe-${machine?.reference}-${formData.report_date}.pdf`)
   }
 
@@ -226,7 +347,7 @@ export default function AddReport() {
         created_at: new Date().toISOString()
       }
 
-      const doc = generatePDF()
+      const doc = await generatePDF()
       const pdfBlob = doc.output('blob')
       const pdfFileName = `${id}/${Date.now()}-informe.pdf`
       

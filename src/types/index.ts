@@ -17,6 +17,10 @@ export interface Machine {
   year: number
   location: string
   status: MachineStatus
+  cliente?: string
+  nit?: string
+  email?: string
+  telefono?: string
   created_at: string
   updated_at: string
 }
@@ -43,9 +47,11 @@ export interface MachineFormData {
   name: string
   brand: string
   model: string
-  year: number
   location: string
-  status: MachineStatus
+  cliente: string
+  nit: string
+  email: string
+  telefono: string
 }
 
 // Datos del formulario de informe

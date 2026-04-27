@@ -30,8 +30,6 @@ export default function Dashboard() {
   
   // Responsive breakpoints
   const isMobile = useMediaQuery('(max-width: 767px)')
-  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)')
-  const isDesktop = useMediaQuery('(min-width: 1024px)')
 
   useEffect(() => {
     fetchMachines()
@@ -67,15 +65,6 @@ export default function Dashboard() {
     m.serial_number.toLowerCase().includes(search.toLowerCase()) ||
     m.name.toLowerCase().includes(search.toLowerCase())
   )
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'activo': return 'bg-green-500'
-      case 'inactivo': return 'bg-red-500'
-      case 'mantenimiento': return 'bg-yellow-500'
-      default: return 'bg-gray-500'
-    }
-  }
 
   if (loading) {
     return (
@@ -136,7 +125,7 @@ export default function Dashboard() {
         </Link>
         
         <div style={{ flex: 1, position: 'relative' }}>
-          <Search className="absolute" style={{ left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666666' }} size={20} />
+          <Search className="absolute" style={{ left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666666', pointerEvents: 'none', zIndex: 10 }} size={20} />
           <input
             type="text"
             placeholder="Buscar por referencia, número de serie o nombre..."
@@ -144,38 +133,6 @@ export default function Dashboard() {
             onChange={(e) => setSearch(e.target.value)}
             className="input-field pl-10"
           />
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : isTablet ? 'repeat(4, 1fr)' : 'repeat(4, 1fr)', 
-        gap: isMobile ? '8px' : '16px', 
-        marginBottom: '24px', 
-        flexShrink: 0 
-      }}>
-        <div className="card">
-          <p style={{ color: '#666666', fontSize: isMobile ? '11px' : '14px' }}>Total</p>
-          <p style={{ color: '#532D8C', fontSize: isMobile ? '20px' : '36px', fontWeight: 'bold' }}>{machines.length}</p>
-        </div>
-        <div className="card">
-          <p style={{ color: '#666666', fontSize: isMobile ? '11px' : '14px' }}>Activas</p>
-          <p style={{ color: '#16a34a', fontSize: isMobile ? '20px' : '36px', fontWeight: 'bold' }}>
-            {machines.filter(m => m.status === 'activo').length}
-          </p>
-        </div>
-        <div className="card">
-          <p style={{ color: '#666666', fontSize: isMobile ? '11px' : '14px' }}>Mant.</p>
-          <p style={{ color: '#ca8a04', fontSize: isMobile ? '20px' : '36px', fontWeight: 'bold' }}>
-            {machines.filter(m => m.status === 'mantenimiento').length}
-          </p>
-        </div>
-        <div className="card">
-          <p style={{ color: '#666666', fontSize: isMobile ? '11px' : '14px' }}>Inact.</p>
-          <p style={{ color: '#dc2626', fontSize: isMobile ? '20px' : '36px', fontWeight: 'bold' }}>
-            {machines.filter(m => m.status === 'inactivo').length}
-          </p>
         </div>
       </div>
 
@@ -206,7 +163,6 @@ export default function Dashboard() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: getStatusColor(machine.status).replace('bg-', '').replace('-500', '') === 'green' ? '#16a34a' : getStatusColor(machine.status).replace('bg-', '').replace('-500', '') === 'yellow' ? '#ca8a04' : getStatusColor(machine.status).replace('bg-', '').replace('-500', '') === 'red' ? '#dc2626' : '#666666' }} />
                   <div>
                     <p style={{ color: '#532D8C', fontWeight: '600', fontSize: isMobile ? '14px' : '16px' }}>{machine.reference}</p>
                     <p style={{ color: '#1a1a1a', fontSize: isMobile ? '12px' : '14px' }}>{machine.name}</p>
@@ -215,7 +171,6 @@ export default function Dashboard() {
                 </div>
                 <div style={{ textAlign: isMobile ? 'left' : 'right' }}>
                   <p style={{ color: '#1a1a1a', fontSize: isMobile ? '12px' : '14px' }}>{machine.brand} {machine.model}</p>
-                  <p style={{ color: '#666666', fontSize: isMobile ? '12px' : '14px' }}>{machine.location}</p>
                 </div>
               </Link>
             ))}

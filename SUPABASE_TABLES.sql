@@ -89,3 +89,11 @@ CREATE POLICY "Auth upload pdfs" ON storage.objects
 
 CREATE POLICY "Auth update pdfs" ON storage.objects
   FOR UPDATE USING (bucket_id = 'machine-pdfs' AND auth.role() = 'authenticated');
+
+-- ============================================
+-- MIGRACIÓN 2026-04-27: Agregar columnas de cliente a machines
+-- ============================================
+ALTER TABLE public.machines ADD COLUMN IF NOT EXISTS cliente TEXT;
+ALTER TABLE public.machines ADD COLUMN IF NOT EXISTS nit TEXT;
+ALTER TABLE public.machines ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE public.machines ADD COLUMN IF NOT EXISTS telefono TEXT;
