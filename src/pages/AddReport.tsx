@@ -144,10 +144,23 @@ export default function AddReport() {
     return urls
   }
 
+  const drawFooter = (doc: jsPDF, pageWidth: number, pageHeight: number) => {
+    doc.setDrawColor(83, 45, 140)
+    doc.line(14, pageHeight - 18, pageWidth - 14, pageHeight - 18)
+    doc.setFontSize(8)
+    doc.setTextColor(100, 100, 100)
+    doc.text(`Técnico: ${formData.technician}`, 14, pageHeight - 10)
+    doc.text(`Gualtech - Javi Control`, pageWidth - 14, pageHeight - 10, { align: 'right' })
+  }
+
   const generatePDF = async (): Promise<jsPDF> => {
     const doc = new jsPDF()
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
+    
+    // Margen útil (entre header y footer)
+    const marginTop = 40
+    const marginBottom = 25
 
     // Obtener consecutivo basado en informes existentes
     let consecutivo = '001'
@@ -161,8 +174,10 @@ export default function AddReport() {
       consecutivo = '001'
     }
 
-    // ===== HEADER =====
-    // Logo a la izquierda
+    // ==========================================
+    // Cargar logo UNA VEZ (async)
+    // ==========================================
+    let logoBase64: string | null = null
     try {
       const img = new window.Image()
       img.src = '/logojavi.PNG'
@@ -171,148 +186,190 @@ export default function AddReport() {
         img.onerror = () => reject()
       })
       const canvas = document.createElement('canvas')
-      canvas.width = img.width
-      canvas.height = img.height
+      canvas.width = img.width || 160
+      canvas.height = img.height || 60
       const ctx = canvas.getContext('2d')!
-      ctx.drawImage(img, 0, 0)
-      const logoBase64 = canvas.toDataURL('image/png')
-      doc.addImage(logoBase64, 'PNG', 14, 10, 40, 15)
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      logoBase64 = canvas.toDataURL('image/png')
     } catch {
-      // Fallback si no carga el logo
-      doc.setFontSize(16)
-      doc.setTextColor(83, 45, 140)
-      doc.text('Gualtech', 14, 20)
+      logoBase64 = null
     }
 
-    // Consecutivo + fecha a la derecha
-    const creationDate = new Date().toLocaleDateString('es-ES')
-    doc.setFontSize(10)
-    doc.setTextColor(100, 100, 100)
-    doc.text(`No. ${consecutivo}`, pageWidth - 14, 15, { align: 'right' })
-    doc.text(`Fecha: ${creationDate}`, pageWidth - 14, 22, { align: 'right' })
+    // ==========================================
+    // HEADER FIJO (se repite en cada página)
+    // ==========================================
+    const drawHeader = () => {
+      if (logoBase64) {
+        doc.addImage(logoBase64, 'PNG', 14, 8, 40, 15)
+      } else {
+        doc.setFontSize(14)
+        doc.setTextColor(83, 45, 140)
+        doc.text('Gualtech', 14, 20)
+      }
 
-    // Línea separadora del header
-    doc.setDrawColor(83, 45, 140)
-    doc.line(14, 32, pageWidth - 14, 32)
+      // Consecutivo + fecha a la derecha
+      const creationDate = new Date().toLocaleDateString('es-ES')
+      doc.setFontSize(10)
+      doc.setTextColor(100, 100, 100)
+      doc.text(`No. ${consecutivo}`, pageWidth - 14, 15, { align: 'right' })
+      doc.text(`Fecha: ${creationDate}`, pageWidth - 14, 22, { align: 'right' })
 
-    // ===== TÍTULO =====
+      // Línea separadora del header
+      doc.setDrawColor(83, 45, 140)
+      doc.line(14, 30, pageWidth - 14, 30)
+    }
+
+    // Dibujar header y footer en primera página
+    drawHeader()
+    drawFooter(doc, pageWidth, pageHeight)
+
+    // ==========================================
+    // TÍTULO
+    // ==========================================
     doc.setTextColor(83, 45, 140)
-    doc.setFontSize(18)
-    doc.text('Informe de Mantenimiento', pageWidth / 2, 44, { align: 'center' })
+    doc.setFontSize(16)
+    doc.text('Informe de Mantenimiento', pageWidth / 2, marginTop, { align: 'center' })
 
-    // ===== INFO DE MÁQUINA =====
+    // ==========================================
+    // INFO DE MÁQUINA
+    // ==========================================
+    doc.setDrawColor(83, 45, 140)
+    doc.setFillColor(245, 245, 245)
+    doc.roundedRect(14, 48, pageWidth - 28, 28, 3, 3, 'F')
+    doc.setTextColor(83, 45, 140)
+    doc.setFontSize(10)
+    doc.text('Máquina', 20, 56)
     doc.setTextColor(0, 0, 0)
+    doc.setFontSize(9)
+    doc.text(`${machine?.reference} - ${machine?.name}`, 20, 64)
+    doc.text(`Serie: ${machine?.serial_number}  |  ${machine?.brand || '-'} ${machine?.model || '-'}`, 20, 72)
+
+    // ==========================================
+    // DATOS DEL INFORME
+    // ==========================================
+    let currentY = 88
+    doc.setDrawColor(83, 45, 140)
+    doc.line(14, currentY, pageWidth - 14, currentY)
+    currentY += 8
+
     doc.setFontSize(11)
-    doc.text(`Máquina: ${machine?.reference} - ${machine?.name}`, 14, 58)
-    doc.text(`Número de Serie: ${machine?.serial_number}`, 14, 65)
-    doc.text(`Marca: ${machine?.brand || '-'}  |  Modelo: ${machine?.model || '-'}`, 14, 72)
-
-    // Línea separadora
-    doc.setDrawColor(83, 45, 140)
-    doc.line(14, 80, pageWidth - 14, 80)
-
-    // ===== DATOS DEL INFORME =====
-    doc.setFontSize(12)
     doc.setTextColor(83, 45, 140)
-    doc.text('Datos del Informe', 14, 90)
+    doc.text('Detalle del Servicio', 14, currentY)
+    currentY += 8
 
     doc.setTextColor(0, 0, 0)
     doc.setFontSize(10)
-    let currentY = 100
-    doc.text(`Fecha: ${new Date(formData.report_date).toLocaleDateString('es-ES')}`, 14, currentY)
-    currentY += 7
-    doc.text(`Tipo: ${formData.maintenance_type}`, 14, currentY)
-    currentY += 7
-    doc.text(`Técnico: ${formData.technician}`, 14, currentY)
-    currentY += 10
 
-    if (formData.cost > 0) {
-      doc.text(`Costo: $${formData.cost.toFixed(2)}`, 14, currentY)
-      currentY += 7
-    }
+    // Fila: Fecha | Tipo
+    doc.text(`Fecha:`, 14, currentY)
+    doc.text(`${new Date(formData.report_date).toLocaleDateString('es-ES')}`, 50, currentY)
+    doc.text(`Tipo:`, pageWidth / 2, currentY)
+    doc.text(`${formData.maintenance_type}`, pageWidth / 2 + 20, currentY)
+    currentY += 8
 
-    // ===== PIEZAS CAMBIADAS =====
+    // Fila: Técnico
+    doc.text(`Técnico:`, 14, currentY)
+    doc.text(`${formData.technician}`, 50, currentY)
+    currentY += 12
+
+    // ==========================================
+    // PIEZAS CAMBIADAS
+    // ==========================================
     if (formData.parts_changed.length > 0) {
-      doc.setFontSize(12)
+      doc.setDrawColor(200, 200, 200)
+      doc.line(14, currentY - 4, pageWidth - 14, currentY - 4)
+
+      doc.setFontSize(11)
       doc.setTextColor(83, 45, 140)
       doc.text('Piezas Cambiadas:', 14, currentY)
-      currentY += 7
+      currentY += 8
       doc.setTextColor(0, 0, 0)
       doc.setFontSize(10)
       formData.parts_changed.forEach((part) => {
         doc.text(`• ${part}`, 20, currentY)
         currentY += 6
       })
-      currentY += 5
+      currentY += 6
     }
 
-    // ===== NOTAS =====
+    // ==========================================
+    // NOTAS
+    // ==========================================
     if (formData.notes) {
-      doc.setFontSize(12)
+      // Verificar espacio antes de notas
+      if (currentY > pageHeight - 60) {
+        doc.addPage()
+        drawHeader()
+        drawFooter(doc, pageWidth, pageHeight)
+        currentY = marginTop + 10
+      }
+
+      doc.setDrawColor(200, 200, 200)
+      doc.line(14, currentY - 4, pageWidth - 14, currentY - 4)
+
+      doc.setFontSize(11)
       doc.setTextColor(83, 45, 140)
       doc.text('Notas:', 14, currentY)
-      currentY += 7
+      currentY += 8
       doc.setTextColor(0, 0, 0)
       doc.setFontSize(10)
       const splitNotes = doc.splitTextToSize(formData.notes, pageWidth - 28)
       doc.text(splitNotes, 14, currentY)
-      currentY += splitNotes.length * 5 + 5
+      currentY += splitNotes.length * 5 + 8
     }
 
-    // ===== FOTOS =====
+    // ==========================================
+    // FOTOS
+    // ==========================================
     if (photosPreview.length > 0) {
       // Verificar espacio en página actual
-      if (currentY > pageHeight - 60) {
+      if (currentY > pageHeight - 50) {
         doc.addPage()
-        currentY = 20
+        drawHeader()
+        drawFooter(doc, pageWidth, pageHeight)
+        currentY = marginTop + 5
       }
 
-      doc.setFontSize(12)
+      doc.setDrawColor(83, 45, 140)
+      doc.line(14, currentY - 4, pageWidth - 14, currentY - 4)
+
+      doc.setFontSize(11)
       doc.setTextColor(83, 45, 140)
-      doc.text('Fotografías:', 14, currentY)
+      doc.text('Registro Fotográfico', 14, currentY)
       currentY += 10
 
-      // Agregar fotos en grilla de 2 columnas
       for (let i = 0; i < photosPreview.length; i++) {
-        // Nueva página si no hay espacio
-        if (currentY + 70 > pageHeight - 20) {
+        if (currentY + 65 > pageHeight - marginBottom) {
           doc.addPage()
-          currentY = 20
-          doc.setFontSize(12)
+          drawHeader()
+          drawFooter(doc, pageWidth, pageHeight)
+          currentY = marginTop + 5
+          doc.setFontSize(10)
           doc.setTextColor(83, 45, 140)
-          doc.text('Fotografías (cont.):', 14, currentY)
+          doc.text('Registro Fotográfico (cont.):', 14, currentY)
           currentY += 10
         }
 
         const col = i % 2
         const row = Math.floor(i / 2)
         const x = 14 + (col * ((pageWidth - 28) / 2 + 5))
-        const photoY = currentY + (row * 68)
+        const photoY = currentY + (row * 65)
 
         try {
-          doc.addImage(photosPreview[i], 'JPEG', x, photoY, 80, 55)
-          doc.setFontSize(8)
-          doc.setTextColor(100, 100, 100)
-          doc.text(`Foto ${i + 1}`, x, photoY + 60)
+          doc.addImage(photosPreview[i], 'JPEG', x, photoY, 78, 52)
+          doc.setFontSize(7)
+          doc.setTextColor(120, 120, 120)
+          doc.text(`Foto ${i + 1}`, x, photoY + 57)
         } catch {
-          doc.setFontSize(8)
-          doc.setTextColor(100, 100, 100)
+          doc.setFontSize(7)
+          doc.setTextColor(180, 180, 180)
           doc.text(`Foto ${i + 1}: No disponible`, x, photoY + 25)
         }
       }
-      
-      // Actualizar currentY después de las fotos
-      const fotoRows = Math.ceil(photosPreview.length / 2)
-      currentY = currentY + (fotoRows * 68)
-    }
 
-    // ===== FOOTER =====
-    doc.setDrawColor(83, 45, 140)
-    doc.line(14, pageHeight - 20, pageWidth - 14, pageHeight - 20)
-    doc.setFontSize(8)
-    doc.setTextColor(100, 100, 100)
-    doc.text(`Técnico: ${formData.technician}`, 14, pageHeight - 12)
-    doc.text(`Generado por Javi Control`, pageWidth - 14, pageHeight - 12, { align: 'right' })
+      const fotoRows = Math.ceil(photosPreview.length / 2)
+      currentY = currentY + (fotoRows * 65)
+    }
 
     return doc
   }
