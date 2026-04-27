@@ -3,6 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Download, X, Image, Loader } from 'lucide-react'
 import imageCompression from 'browser-image-compression'
 import { jsPDF } from 'jspdf'
+
+const FONT = 'helvetica'
+const BOLD = 'bold'
+const NORMAL = 'normal'
 import { supabase } from '../services/supabase'
 import { Machine, ReportFormData } from '../types'
 
@@ -144,25 +148,53 @@ export default function AddReport() {
     return urls
   }
 
+  const PRIMARY = '#532D8C'
+  const PRIMARY_RGB: [number, number, number] = [83, 45, 140]
+  const GRAY_LIGHT = '#f5f5f5'
+  const GRAY_TEXT = '#666666'
+  const MARGIN = 14
+  const HEADER_H = 48
+  const FOOTER_H = 22
+  const CONTENT_W = (pw: number) => pw - MARGIN * 2
+
+  const drawPageBand = (doc: jsPDF, pageWidth: number, y: number, h: number, color: [number, number, number]) => {
+    doc.setFillColor(...color)
+    doc.rect(0, y, pageWidth, h, 'F')
+  }
+
   const drawFooter = (doc: jsPDF, pageWidth: number, pageHeight: number) => {
-    doc.setDrawColor(83, 45, 140)
-    doc.line(14, pageHeight - 18, pageWidth - 14, pageHeight - 18)
+    const fy = pageHeight - FOOTER_H
+    doc.setDrawColor(...PRIMARY_RGB)
+    doc.line(MARGIN, fy, pageWidth - MARGIN, fy)
     doc.setFontSize(8)
     doc.setTextColor(100, 100, 100)
-    doc.text(`Técnico: ${formData.technician}`, 14, pageHeight - 10)
-    doc.text(`Gualtech - Javi Control`, pageWidth - 14, pageHeight - 10, { align: 'right' })
+    doc.text(`Técnico: ${formData.technician}`, MARGIN, fy + 10)
+    doc.text(`Gualtech - Javi Control`, pageWidth - MARGIN, fy + 10, { align: 'right' })
+  }
+
+  const drawSectionTitle = (doc: jsPDF, y: number, title: string, pageWidth: number) => {
+    const cw = CONTENT_W(pageWidth)
+    // Línea horizontal fina
+    doc.setDrawColor(220, 210, 235)
+    doc.line(MARGIN, y, pageWidth - MARGIN, y)
+    // Título en color primario
+    doc.setFontSize(11)
+    doc.setTextColor(...PRIMARY_RGB)
+    doc.setFont(FONT, BOLD)
+    doc.text(title, MARGIN, y + 7)
+    doc.setFont(FONT, NORMAL)
+    return y + 14
   }
 
   const generatePDF = async (): Promise<jsPDF> => {
     const doc = new jsPDF()
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
-    
-    // Margen útil (entre header y footer)
-    const marginTop = 40
-    const marginBottom = 25
+    const cw = CONTENT_W(pageWidth)
 
-    // Obtener consecutivo basado en informes existentes
+    // ==========================================
+    // Consecutivo (desde DB)
+    // ==========================================
     let consecutivo = '001'
     try {
       const { count } = await supabase
@@ -175,7 +207,7 @@ export default function AddReport() {
     }
 
     // ==========================================
-    // Cargar logo UNA VEZ (async)
+    // Logo (cargar una vez)
     // ==========================================
     let logoBase64: string | null = null
     try {
@@ -196,179 +228,187 @@ export default function AddReport() {
     }
 
     // ==========================================
-    // HEADER FIJO (se repite en cada página)
+    // drawHeader: se llama en cada página
     // ==========================================
-    const drawHeader = () => {
+    const drawHeader = (firstPage = false) => {
+      // Banda púrpura completa
+      drawPageBand(doc, pageWidth, 0, HEADER_H, PRIMARY_RGB)
+
+      // Logo (blanco sobre fondo púrpura)
+      doc.setTextColor(255, 255, 255)
       if (logoBase64) {
-        doc.addImage(logoBase64, 'PNG', 14, 8, 40, 15)
+        doc.addImage(logoBase64, 'PNG', MARGIN, 12, 50, 18)
       } else {
         doc.setFontSize(14)
-        doc.setTextColor(83, 45, 140)
-        doc.text('Gualtech', 14, 20)
+        doc.text('Gualtech', MARGIN, 26)
       }
 
       // Consecutivo + fecha a la derecha
       const creationDate = new Date().toLocaleDateString('es-ES')
-      doc.setFontSize(10)
-      doc.setTextColor(100, 100, 100)
-      doc.text(`No. ${consecutivo}`, pageWidth - 14, 15, { align: 'right' })
-      doc.text(`Fecha: ${creationDate}`, pageWidth - 14, 22, { align: 'right' })
-
-      // Línea separadora del header
-      doc.setDrawColor(83, 45, 140)
-      doc.line(14, 30, pageWidth - 14, 30)
+      doc.setFontSize(11)
+      doc.text(`No. ${consecutivo}`, pageWidth - MARGIN, 18, { align: 'right' })
+      doc.setFontSize(9)
+      doc.text(creationDate, pageWidth - MARGIN, 28, { align: 'right' })
     }
 
-    // Dibujar header y footer en primera página
-    drawHeader()
+    // Dibujar primera página
+    drawHeader(true)
     drawFooter(doc, pageWidth, pageHeight)
 
     // ==========================================
-    // TÍTULO
+    // CONTENIDO
     // ==========================================
-    doc.setTextColor(83, 45, 140)
-    doc.setFontSize(16)
-    doc.text('Informe de Mantenimiento', pageWidth / 2, marginTop, { align: 'center' })
+    let y = HEADER_H + 8
 
-    // ==========================================
-    // INFO DE MÁQUINA
-    // ==========================================
-    doc.setDrawColor(83, 45, 140)
-    doc.setFillColor(245, 245, 245)
-    doc.roundedRect(14, 48, pageWidth - 28, 28, 3, 3, 'F')
-    doc.setTextColor(83, 45, 140)
+    // ---- TÍTULO ----
+    doc.setTextColor(...PRIMARY_RGB)
+    doc.setFontSize(18)
+    doc.setFont(FONT, BOLD)
+    doc.text('INFORME DE MANTENIMIENTO', pageWidth / 2, y, { align: 'center' })
+    doc.setFont(FONT, NORMAL)
+    y += 14
+
+    // ---- CARD: MÁQUINA ----
+    const cardX = MARGIN
+    const cardW = cw
+    const cardY = y
+    const cardH = 34
+
+    // Sombra/sutil: rectángulo gris de fondo
+    doc.setFillColor(248, 247, 250)
+    doc.setDrawColor(...PRIMARY_RGB)
+    doc.roundedRect(cardX, cardY, cardW, cardH, 3, 3, 'FD')
+
+    // Barra lateral púrpura
+    doc.setFillColor(...PRIMARY_RGB)
+    doc.rect(cardX, cardY, 4, cardH, 'F')
+
+    doc.setTextColor(...PRIMARY_RGB)
     doc.setFontSize(10)
-    doc.text('Máquina', 20, 56)
-    doc.setTextColor(0, 0, 0)
+    doc.setFont(FONT, BOLD)
+    doc.text('MÁQUINA', cardX + 14, cardY + 8)
+    doc.setFont(FONT, NORMAL)
+
+    doc.setTextColor(40, 40, 40)
+    doc.setFontSize(10)
+    doc.text(`${machine?.reference} - ${machine?.name}`, cardX + 14, cardY + 20)
     doc.setFontSize(9)
-    doc.text(`${machine?.reference} - ${machine?.name}`, 20, 64)
-    doc.text(`Serie: ${machine?.serial_number}  |  ${machine?.brand || '-'} ${machine?.model || '-'}`, 20, 72)
+    doc.setTextColor(100, 100, 100)
+    doc.text(`Serie: ${machine?.serial_number}  |  ${machine?.brand || '-'} ${machine?.model || '-'}`, cardX + 14, cardY + 30)
 
-    // ==========================================
-    // DATOS DEL INFORME
-    // ==========================================
-    let currentY = 88
-    doc.setDrawColor(83, 45, 140)
-    doc.line(14, currentY, pageWidth - 14, currentY)
-    currentY += 8
+    y = cardY + cardH + 10
 
-    doc.setFontSize(11)
-    doc.setTextColor(83, 45, 140)
-    doc.text('Detalle del Servicio', 14, currentY)
-    currentY += 8
+    // ---- DETALLE DEL SERVICIO ----
+    y = drawSectionTitle(doc, y, 'DETALLE DEL SERVICIO', pageWidth)
 
-    doc.setTextColor(0, 0, 0)
+    doc.setTextColor(60, 60, 60)
     doc.setFontSize(10)
 
-    // Fila: Fecha | Tipo
-    doc.text(`Fecha:`, 14, currentY)
-    doc.text(`${new Date(formData.report_date).toLocaleDateString('es-ES')}`, 50, currentY)
-    doc.text(`Tipo:`, pageWidth / 2, currentY)
-    doc.text(`${formData.maintenance_type}`, pageWidth / 2 + 20, currentY)
-    currentY += 8
+    // Fecha | Tipo (en columnas)
+    const col1X = MARGIN + 4
+    const col2X = MARGIN + 50
+    const col3X = pageWidth / 2 + 4
+    const col4X = pageWidth / 2 + 45
 
-    // Fila: Técnico
-    doc.text(`Técnico:`, 14, currentY)
-    doc.text(`${formData.technician}`, 50, currentY)
-    currentY += 12
+    doc.setFont(FONT, BOLD)
+    doc.text('Fecha:', col1X, y)
+    doc.setFont(FONT, NORMAL)
+    doc.text(new Date(formData.report_date).toLocaleDateString('es-ES'), col2X, y)
+    doc.setFont(FONT, BOLD)
+    doc.text('Tipo:', col3X, y)
+    doc.setFont(FONT, NORMAL)
+    doc.text(formData.maintenance_type, col4X, y)
+    y += 9
 
-    // ==========================================
-    // PIEZAS CAMBIADAS
-    // ==========================================
+    doc.setFont(FONT, BOLD)
+    doc.text('Técnico:', col1X, y)
+    doc.setFont(FONT, NORMAL)
+    doc.text(formData.technician, col2X, y)
+    y += 14
+
+    // ---- PIEZAS CAMBIADAS ----
     if (formData.parts_changed.length > 0) {
-      doc.setDrawColor(200, 200, 200)
-      doc.line(14, currentY - 4, pageWidth - 14, currentY - 4)
+      y = drawSectionTitle(doc, y, 'PIEZAS CAMBIADAS', pageWidth)
 
-      doc.setFontSize(11)
-      doc.setTextColor(83, 45, 140)
-      doc.text('Piezas Cambiadas:', 14, currentY)
-      currentY += 8
-      doc.setTextColor(0, 0, 0)
+      doc.setTextColor(60, 60, 60)
       doc.setFontSize(10)
       formData.parts_changed.forEach((part) => {
-        doc.text(`• ${part}`, 20, currentY)
-        currentY += 6
+        doc.text(`•  ${part}`, MARGIN + 8, y)
+        y += 7
       })
-      currentY += 6
+      y += 6
     }
 
-    // ==========================================
-    // NOTAS
-    // ==========================================
+    // ---- NOTAS ----
     if (formData.notes) {
-      // Verificar espacio antes de notas
-      if (currentY > pageHeight - 60) {
+      if (y > pageHeight - FOOTER_H - 40) {
         doc.addPage()
         drawHeader()
         drawFooter(doc, pageWidth, pageHeight)
-        currentY = marginTop + 10
+        y = HEADER_H + 10
       }
 
-      doc.setDrawColor(200, 200, 200)
-      doc.line(14, currentY - 4, pageWidth - 14, currentY - 4)
+      y = drawSectionTitle(doc, y, 'NOTAS', pageWidth)
 
-      doc.setFontSize(11)
-      doc.setTextColor(83, 45, 140)
-      doc.text('Notas:', 14, currentY)
-      currentY += 8
-      doc.setTextColor(0, 0, 0)
+      doc.setTextColor(60, 60, 60)
       doc.setFontSize(10)
-      const splitNotes = doc.splitTextToSize(formData.notes, pageWidth - 28)
-      doc.text(splitNotes, 14, currentY)
-      currentY += splitNotes.length * 5 + 8
+      const splitNotes = doc.splitTextToSize(formData.notes, cw - 8)
+      doc.text(splitNotes, MARGIN + 8, y)
+      y += splitNotes.length * 5 + 10
     }
 
-    // ==========================================
-    // FOTOS
-    // ==========================================
+    // ---- REGISTRO FOTOGRÁFICO ----
     if (photosPreview.length > 0) {
-      // Verificar espacio en página actual
-      if (currentY > pageHeight - 50) {
+      if (y > pageHeight - FOOTER_H - 30) {
         doc.addPage()
         drawHeader()
         drawFooter(doc, pageWidth, pageHeight)
-        currentY = marginTop + 5
+        y = HEADER_H + 10
       }
 
-      doc.setDrawColor(83, 45, 140)
-      doc.line(14, currentY - 4, pageWidth - 14, currentY - 4)
+      y = drawSectionTitle(doc, y, 'REGISTRO FOTOGRÁFICO', pageWidth)
 
-      doc.setFontSize(11)
-      doc.setTextColor(83, 45, 140)
-      doc.text('Registro Fotográfico', 14, currentY)
-      currentY += 10
+      const imgW = (cw - 20) / 2
+      const imgH = imgW * 0.65
+      const gapX = 10
+      const gapY = 12
 
       for (let i = 0; i < photosPreview.length; i++) {
-        if (currentY + 65 > pageHeight - marginBottom) {
+        const col = i % 2
+        const row = Math.floor(i / 2)
+
+        // Salto de página si no entra la fila
+        if (y + imgH + gapY > pageHeight - FOOTER_H) {
           doc.addPage()
           drawHeader()
           drawFooter(doc, pageWidth, pageHeight)
-          currentY = marginTop + 5
-          doc.setFontSize(10)
-          doc.setTextColor(83, 45, 140)
-          doc.text('Registro Fotográfico (cont.):', 14, currentY)
-          currentY += 10
+          y = HEADER_H + 10
+          y = drawSectionTitle(doc, y, 'REGISTRO FOTOGRÁFICO (cont.)', pageWidth)
         }
 
-        const col = i % 2
-        const row = Math.floor(i / 2)
-        const x = 14 + (col * ((pageWidth - 28) / 2 + 5))
-        const photoY = currentY + (row * 65)
+        const ix = MARGIN + col * (imgW + gapX)
+        const iy = y + row * (imgH + gapY)
+
+        // Borde sutil alrededor de la foto
+        doc.setDrawColor(200, 200, 200)
+        doc.setFillColor(248, 247, 250)
+        doc.roundedRect(ix - 1, iy - 1, imgW + 2, imgH + 14, 2, 2, 'FD')
 
         try {
-          doc.addImage(photosPreview[i], 'JPEG', x, photoY, 78, 52)
-          doc.setFontSize(7)
-          doc.setTextColor(120, 120, 120)
-          doc.text(`Foto ${i + 1}`, x, photoY + 57)
+          doc.addImage(photosPreview[i], 'JPEG', ix, iy, imgW, imgH)
         } catch {
-          doc.setFontSize(7)
+          doc.setFontSize(8)
           doc.setTextColor(180, 180, 180)
-          doc.text(`Foto ${i + 1}: No disponible`, x, photoY + 25)
+          doc.text('Imagen no disponible', ix + 10, iy + imgH / 2)
         }
+
+        doc.setFontSize(7)
+        doc.setTextColor(140, 140, 140)
+        doc.text(`Foto ${i + 1}`, ix + 2, iy + imgH + 8)
       }
 
-      const fotoRows = Math.ceil(photosPreview.length / 2)
-      currentY = currentY + (fotoRows * 65)
+      const totalRows = Math.ceil(photosPreview.length / 2)
+      y = y + totalRows * (imgH + gapY) + 6
     }
 
     return doc
