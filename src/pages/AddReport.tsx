@@ -264,49 +264,44 @@ export default function AddReport() {
       doc.setFillColor(...PRIMARY_RGB)
       doc.roundedRect(headerX, headerY, headerW, headerH, 6, 6, 'F')
 
-      // --- LOGO with rounded border (circle clip) ---
-      const logoSize = 32
-      const logoCX = headerX + 24
-      const logoCY = headerY + headerH / 2
+      // --- LOGO with rounded border ---
+      const logoPrintH = 28
+      const logoPrintW = logoW > 0 ? (logoW / logoH) * logoPrintH : 50
+      const logoXPad = headerX + 8
+      const logoYPad = headerY + (headerH - logoPrintH) / 2
 
       if (logoBase64) {
-        // Draw white circle behind logo (border effect)
+        // White rounded rect behind logo (border effect)
         doc.setFillColor(255, 255, 255)
-        doc.circle(logoCX, logoCY, logoSize / 2 + 2, 'F')
-        // Clip to circle and draw logo
-        doc.saveGraphicsState()
-        // Define circle path WITHOUT drawing (no 'S'/'F' → adds to path only)
-        doc.circle(logoCX, logoCY, logoSize / 2)
-        doc.clip()
-        const logoDrawW = logoSize * 0.85
-        const logoDrawH = (logoH / logoW) * logoDrawW
-        doc.addImage(logoBase64, 'PNG', logoCX - logoDrawW / 2, logoCY - logoDrawH / 2, logoDrawW, logoDrawH)
-        doc.restoreGraphicsState()
+        doc.roundedRect(logoXPad - 2, logoYPad - 2, logoPrintW + 4, logoPrintH + 4, 3, 3, 'F')
+        // Logo image
+        doc.addImage(logoBase64, 'PNG', logoXPad, logoYPad, logoPrintW, logoPrintH)
       } else {
-        // Fallback: purple circle with initial
+        // Fallback: white rounded rect with initial
         doc.setFillColor(255, 255, 255)
-        doc.circle(logoCX, logoCY, logoSize / 2, 'F')
+        doc.roundedRect(logoXPad - 2, logoYPad - 2, logoPrintW + 4, logoPrintH + 4, 3, 3, 'F')
         doc.setTextColor(...PRIMARY_RGB)
-        doc.setFontSize(12)
+        doc.setFontSize(14)
         doc.setFont(FONT, BOLD)
-        doc.text('G', logoCX, logoCY + 4, { align: 'center' })
+        doc.text('G', logoXPad + logoPrintW / 2, logoYPad + logoPrintH / 2 + 4, { align: 'center' })
       }
 
       // --- TITLE: "INFORME DE MANTENIMIENTO" next to logo ---
+      const headerCY = headerY + headerH / 2
       doc.setTextColor(255, 255, 255)
       doc.setFontSize(14)
       doc.setFont(FONT, BOLD)
-      const titleX = logoCX + logoSize / 2 + 14
-      doc.text('INFORME DE MANTENIMIENTO', titleX, logoCY - 3)
+      const titleX = logoXPad + logoPrintW + 14
+      doc.text('INFORME DE MANTENIMIENTO', titleX, headerCY - 3)
       doc.setFont(FONT, NORMAL)
 
       // --- Consecutive + date on the right ---
       const creationDate = new Date().toLocaleDateString('es-ES')
       doc.setFontSize(10)
-      doc.text(`N° ${consecutivo}`, headerX + headerW - 6, logoCY - 3, { align: 'right' })
+      doc.text(`N° ${consecutivo}`, headerX + headerW - 6, headerCY - 3, { align: 'right' })
       doc.setFontSize(7)
       doc.setTextColor(220, 210, 235)
-      doc.text(creationDate, headerX + headerW - 6, logoCY + 8, { align: 'right' })
+      doc.text(creationDate, headerX + headerW - 6, headerCY + 8, { align: 'right' })
     }
 
     // Dibujar primera página
