@@ -179,7 +179,7 @@ export default function AddReport() {
     doc.setFont(FONT, NORMAL)
     doc.setTextColor(60, 60, 60)
     doc.setFontSize(11)
-    doc.text(formData.technician || '\u2014', MARGIN + 4, footerY + 21)
+    doc.text(formData.technician || '—', MARGIN + 4, footerY + 21)
 
     // Right side: Company branding
     doc.setTextColor(140, 140, 140)
@@ -275,7 +275,8 @@ export default function AddReport() {
         doc.circle(logoCX, logoCY, logoSize / 2 + 2, 'F')
         // Clip to circle and draw logo
         doc.saveGraphicsState()
-        doc.circle(logoCX, logoCY, logoSize / 2, 'S')
+        // Define circle path WITHOUT drawing (no 'S'/'F' → adds to path only)
+        doc.circle(logoCX, logoCY, logoSize / 2)
         doc.clip()
         const logoDrawW = logoSize * 0.85
         const logoDrawH = (logoH / logoW) * logoDrawW
@@ -302,7 +303,7 @@ export default function AddReport() {
       // --- Consecutive + date on the right ---
       const creationDate = new Date().toLocaleDateString('es-ES')
       doc.setFontSize(10)
-      doc.text(`N\u00B0 ${consecutivo}`, headerX + headerW - 6, logoCY - 3, { align: 'right' })
+      doc.text(`N° ${consecutivo}`, headerX + headerW - 6, logoCY - 3, { align: 'right' })
       doc.setFontSize(7)
       doc.setTextColor(220, 210, 235)
       doc.text(creationDate, headerX + headerW - 6, logoCY + 8, { align: 'right' })
