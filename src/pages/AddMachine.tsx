@@ -199,12 +199,12 @@ export default function AddMachine() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-4 pt-4">
-            <button type="button" onClick={() => navigate(-1)} className="btn-secondary">
+          <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-primary">
+            <button type="button" onClick={() => navigate(-1)} className="btn-secondary px-5 py-2 text-sm">
               Cancelar
             </button>
-            <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2">
-              <Save size={18} />
+            <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2 px-5 py-2 text-sm">
+              <Save size={16} />
               {loading ? 'Guardando...' : 'Guardar Máquina'}
             </button>
           </div>
