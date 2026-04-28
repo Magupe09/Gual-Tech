@@ -125,13 +125,14 @@ export default function Dashboard() {
         </Link>
         
         <div style={{ flex: 1, position: 'relative' }}>
-          <Search className="absolute" style={{ left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666666', pointerEvents: 'none', zIndex: 10 }} size={20} />
+          <Search className="absolute" style={{ left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#666666', pointerEvents: 'none', zIndex: 10 }} size={18} />
           <input
             type="text"
             placeholder="Buscar por referencia, número de serie o nombre..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input-field pl-10"
+            style={{ paddingLeft: '42px' }}
           />
         </div>
       </div>
