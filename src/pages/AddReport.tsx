@@ -153,18 +153,39 @@ export default function AddReport() {
   const GRAY_LIGHT = '#f5f5f5'
   const GRAY_TEXT = '#666666'
   const MARGIN = 14
-  const HEADER_H = 48
-  const FOOTER_H = 22
+  const HEADER_H = 66    // content starts at y=66 (6px top margin + 50px header + 10px spacing)
+  const FOOTER_H = 36    // taller footer with technician info
   const CONTENT_W = (pw: number) => pw - MARGIN * 2
 
   const drawFooter = (doc: jsPDF, pageWidth: number, pageHeight: number) => {
-    const fy = pageHeight - FOOTER_H
+    const footerY = pageHeight - 36
+    const footerH = 30
+    const footerX = MARGIN - 4
+
+    // Background band
+    doc.setFillColor(245, 240, 250)
+    doc.roundedRect(footerX, footerY, pageWidth - (MARGIN - 4) * 2, footerH, 5, 5, 'F')
+
+    // Top accent line
     doc.setDrawColor(...PRIMARY_RGB)
-    doc.line(MARGIN, fy, pageWidth - MARGIN, fy)
-    doc.setFontSize(8)
-    doc.setTextColor(100, 100, 100)
-    doc.text(`Técnico: ${formData.technician}`, MARGIN, fy + 10)
-    doc.text(`Gualtech - Javi Control`, pageWidth - MARGIN, fy + 10, { align: 'right' })
+    doc.setLineWidth(0.8)
+    doc.line(MARGIN, footerY, pageWidth - MARGIN, footerY)
+
+    // Left side: Technician info
+    doc.setTextColor(...PRIMARY_RGB)
+    doc.setFontSize(9)
+    doc.setFont(FONT, BOLD)
+    doc.text('Técnico', MARGIN + 4, footerY + 9)
+    doc.setFont(FONT, NORMAL)
+    doc.setTextColor(60, 60, 60)
+    doc.setFontSize(11)
+    doc.text(formData.technician || '\u2014', MARGIN + 4, footerY + 21)
+
+    // Right side: Company branding
+    doc.setTextColor(140, 140, 140)
+    doc.setFontSize(7)
+    doc.text('Gualtech', pageWidth - MARGIN - 4, footerY + 12, { align: 'right' })
+    doc.text('Javi Control', pageWidth - MARGIN - 4, footerY + 19, { align: 'right' })
   }
 
   const drawSectionTitle = (doc: jsPDF, y: number, title: string, pageWidth: number) => {
@@ -227,41 +248,64 @@ export default function AddReport() {
       logoBase64 = null
     }
 
-    // Calcular tamaño del logo manteniendo proporción
-    const logoMaxH = 22
-    let logoPrintW = 50
-    let logoPrintH = logoMaxH
-    if (logoW > 0 && logoH > 0) {
-      const aspect = logoW / logoH
-      logoPrintW = logoMaxH * aspect
-      logoPrintH = logoMaxH
-    }
-    const logoX = MARGIN
-    const logoY = (HEADER_H - logoPrintH) / 2
+    // Logo dimensions will be calculated inside drawHeader
 
     // ==========================================
     // drawHeader: se llama en cada página
     // ==========================================
     const drawHeader = () => {
-      // Banda púrpura con esquinas redondeadas (solo superior)
-      doc.setFillColor(...PRIMARY_RGB)
-      doc.roundedRect(0, 0, pageWidth, HEADER_H, 10, 10, 'F')
+      // Header background with margins — NOT edge-to-edge
+      const headerX = MARGIN - 4
+      const headerW = pageWidth - (MARGIN - 4) * 2
+      const headerY = 6
+      const headerH = 50
 
-      // Logo (blanco sobre fondo púrpura, con proporción)
-      doc.setTextColor(255, 255, 255)
+      // Background box: purple, rounded corners
+      doc.setFillColor(...PRIMARY_RGB)
+      doc.roundedRect(headerX, headerY, headerW, headerH, 6, 6, 'F')
+
+      // --- LOGO with rounded border (circle clip) ---
+      const logoSize = 32
+      const logoCX = headerX + 24
+      const logoCY = headerY + headerH / 2
+
       if (logoBase64) {
-        doc.addImage(logoBase64, 'PNG', logoX, logoY, logoPrintW, logoPrintH)
+        // Draw white circle behind logo (border effect)
+        doc.setFillColor(255, 255, 255)
+        doc.circle(logoCX, logoCY, logoSize / 2 + 2, 'F')
+        // Clip to circle and draw logo
+        doc.saveGraphicsState()
+        doc.circle(logoCX, logoCY, logoSize / 2, 'S')
+        doc.clip()
+        const logoDrawW = logoSize * 0.85
+        const logoDrawH = (logoH / logoW) * logoDrawW
+        doc.addImage(logoBase64, 'PNG', logoCX - logoDrawW / 2, logoCY - logoDrawH / 2, logoDrawW, logoDrawH)
+        doc.restoreGraphicsState()
       } else {
-        doc.setFontSize(14)
-        doc.text('Gualtech', MARGIN, 28)
+        // Fallback: purple circle with initial
+        doc.setFillColor(255, 255, 255)
+        doc.circle(logoCX, logoCY, logoSize / 2, 'F')
+        doc.setTextColor(...PRIMARY_RGB)
+        doc.setFontSize(12)
+        doc.setFont(FONT, BOLD)
+        doc.text('G', logoCX, logoCY + 4, { align: 'center' })
       }
 
-      // Consecutivo + fecha a la derecha
+      // --- TITLE: "INFORME DE MANTENIMIENTO" next to logo ---
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(14)
+      doc.setFont(FONT, BOLD)
+      const titleX = logoCX + logoSize / 2 + 14
+      doc.text('INFORME DE MANTENIMIENTO', titleX, logoCY - 3)
+      doc.setFont(FONT, NORMAL)
+
+      // --- Consecutive + date on the right ---
       const creationDate = new Date().toLocaleDateString('es-ES')
-      doc.setFontSize(11)
-      doc.text(`No. ${consecutivo}`, pageWidth - MARGIN, 18, { align: 'right' })
-      doc.setFontSize(9)
-      doc.text(creationDate, pageWidth - MARGIN, 28, { align: 'right' })
+      doc.setFontSize(10)
+      doc.text(`N\u00B0 ${consecutivo}`, headerX + headerW - 6, logoCY - 3, { align: 'right' })
+      doc.setFontSize(7)
+      doc.setTextColor(220, 210, 235)
+      doc.text(creationDate, headerX + headerW - 6, logoCY + 8, { align: 'right' })
     }
 
     // Dibujar primera página
@@ -271,15 +315,7 @@ export default function AddReport() {
     // ==========================================
     // CONTENIDO
     // ==========================================
-    let y = HEADER_H + 8
-
-    // ---- TÍTULO ----
-    doc.setTextColor(...PRIMARY_RGB)
-    doc.setFontSize(18)
-    doc.setFont(FONT, BOLD)
-    doc.text('INFORME DE MANTENIMIENTO', pageWidth / 2, y, { align: 'center' })
-    doc.setFont(FONT, NORMAL)
-    y += 14
+    let y = HEADER_H
 
     // ---- CARD: MÁQUINA ----
     const cardX = MARGIN
@@ -333,11 +369,7 @@ export default function AddReport() {
     doc.text(formData.maintenance_type, col4X, y)
     y += 9
 
-    doc.setFont(FONT, BOLD)
-    doc.text('Técnico:', col1X, y)
-    doc.setFont(FONT, NORMAL)
-    doc.text(formData.technician, col2X, y)
-    y += 14
+    y += 5
 
     // ---- PIEZAS CAMBIADAS ----
     if (formData.parts_changed.length > 0) {
@@ -358,7 +390,7 @@ export default function AddReport() {
         doc.addPage()
         drawHeader()
         drawFooter(doc, pageWidth, pageHeight)
-        y = HEADER_H + 10
+        y = HEADER_H
       }
 
       y = drawSectionTitle(doc, y, 'NOTAS', pageWidth)
@@ -376,7 +408,7 @@ export default function AddReport() {
         doc.addPage()
         drawHeader()
         drawFooter(doc, pageWidth, pageHeight)
-        y = HEADER_H + 10
+        y = HEADER_H
       }
 
       y = drawSectionTitle(doc, y, 'REGISTRO FOTOGRÁFICO', pageWidth)
@@ -395,7 +427,7 @@ export default function AddReport() {
           doc.addPage()
           drawHeader()
           drawFooter(doc, pageWidth, pageHeight)
-          y = HEADER_H + 10
+          y = HEADER_H
           y = drawSectionTitle(doc, y, 'REGISTRO FOTOGRÁFICO (cont.)', pageWidth)
         }
 
