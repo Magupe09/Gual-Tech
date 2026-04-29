@@ -173,12 +173,15 @@ export default function MachineDetail() {
     setShowPinModal(true)
   }
 
+  // PIN de seguridad para eliminar informes
+  const DELETE_PIN = import.meta.env.VITE_DELETE_PIN || '0000'
+
   /**
    * ELIMINAR CON PIN
    * Valida el PIN de 4 dígitos antes de eliminar
    */
   const handleDeleteWithPin = async () => {
-    if (pinInput !== '0000') {
+    if (pinInput !== DELETE_PIN) {
       setPinError('Código incorrecto')
       return
     }
