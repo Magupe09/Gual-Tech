@@ -199,7 +199,15 @@ export default function AddMachine() {
             </div>
           </div>
 
-          <div className="flex justify-center gap-4 pt-10 pb-4 mt-10 border-t border-primary">
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '16px',
+            paddingTop: '48px',
+            paddingBottom: '24px',
+            marginTop: '48px',
+            borderTop: '1px solid #532D8C'
+          }}>
             <button type="button" onClick={() => navigate(-1)} className="btn-secondary px-6 py-2">
               Cancelar
             </button>
