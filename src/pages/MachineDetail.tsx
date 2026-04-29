@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Plus, FileText, Calendar, User, Package, Trash2, Download, CheckCircle, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Plus, FileText, Calendar, User, Package, Trash2, Download, CheckCircle, AlertCircle, Filter } from 'lucide-react'
 import { supabase } from '../services/supabase'
 import { deleteMachine, deleteReport } from '../services/database'
 import { sendReportEmail } from '../services/email'
@@ -38,6 +38,21 @@ export default function MachineDetail() {
       return () => clearTimeout(timer)
     }
   }, [notification])
+
+  // Estados para filtro por mes
+  const [selectedMonth, setSelectedMonth] = useState<string>('')
+
+  // Extraer meses disponibles de los informes (formato YYYY-MM)
+  const availableMonths = [...new Set(
+    reports
+      .filter(r => r.report_date)
+      .map(r => r.report_date.substring(0, 7))
+  )].sort().reverse()
+
+  // Filtrar informes según el mes seleccionado
+  const filteredReports = selectedMonth
+    ? reports.filter(r => r.report_date?.startsWith(selectedMonth))
+    : reports
 
   useEffect(() => {
     if (id) {
@@ -355,7 +370,47 @@ export default function MachineDetail() {
 
         {/* Reports History */}
         <div style={{ backgroundColor: '#ffffff', border: '1px solid #532D8C', borderRadius: '12px', padding: '24px' }}>
-          <h2 style={{ color: '#532D8C', fontSize: '20px', fontWeight: 'bold', marginBottom: '24px' }}>Historial de Informes</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+            <h2 style={{ color: '#532D8C', fontSize: '20px', fontWeight: 'bold' }}>Historial de Informes</h2>
+            
+            {/* Filtro por mes */}
+            {availableMonths.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Filter size={16} style={{ color: '#532D8C' }} />
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  style={{
+                    padding: '8px 12px',
+                    border: '1px solid #532D8C',
+                    borderRadius: '8px',
+                    color: '#532D8C',
+                    fontSize: '14px',
+                    backgroundColor: '#ffffff',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    minWidth: '180px'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = '#7B5CC9'
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(123, 92, 201, 0.2)'
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = '#532D8C'
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
+                >
+                  <option value="">Todos los meses</option>
+                  {availableMonths.map(month => {
+                    const [year, monthNum] = month.split('-')
+                    const date = new Date(parseInt(year), parseInt(monthNum) - 1)
+                    const label = date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long' })
+                    return <option key={month} value={month}>{label}</option>
+                  })}
+                </select>
+              </div>
+            )}
+          </div>
           
           {reports.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '32px 0', color: '#666666' }}>
@@ -365,9 +420,20 @@ export default function MachineDetail() {
                 Crear el primer informe
               </Link>
             </div>
+          ) : filteredReports.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 0', color: '#666666' }}>
+              <Filter size={48} style={{ margin: '0 auto 16px', opacity: 0.5, color: '#532D8C' }} />
+              <p style={{ marginBottom: '8px' }}>No hay informes para el mes seleccionado</p>
+              <button
+                onClick={() => setSelectedMonth('')}
+                style={{ color: '#532D8C', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}
+              >
+                Mostrar todos los informes
+              </button>
+            </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {reports.map(report => (
+              {filteredReports.map(report => (
                 <div key={report.id} style={{ padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
