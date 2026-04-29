@@ -6,7 +6,7 @@ import { supabase } from './supabase'
  * Lista de emails que pueden registrarse en la app.
  * Cambiar aquí si necesitás agregar o remover usuarios.
  */
-const AUTHORIZED_EMAILS = ['maonvacation@gmail.com', 'yaudy77@gmail.com']
+const AUTHORIZED_EMAILS = ['maonvacation@gmail.com', 'yaudy77@gmail.com', 'javier.mtto.bog@hotmail.com']
 
 /**
  * VALIDAR EMAIL AUTORIZADO

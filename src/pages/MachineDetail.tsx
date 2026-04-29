@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Plus, FileText, Calendar, User, Package, Trash2, Download, Mail } from 'lucide-react'
+import { ArrowLeft, Plus, FileText, Calendar, User, Package, Trash2, Download, CheckCircle, AlertCircle } from 'lucide-react'
 import { supabase } from '../services/supabase'
 import { deleteMachine, deleteReport } from '../services/database'
+import { sendReportEmail } from '../services/email'
 import { Machine, Report } from '../types'
 import ConfirmModal from '../components/ConfirmModal'
 import ActionMenu from '../components/ActionMenu'
@@ -25,6 +26,18 @@ export default function MachineDetail() {
   const [pinInput, setPinInput] = useState('')
   const [pinError, setPinError] = useState('')
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null)
+
+  // Estados para envío de email
+  const [sendingReportId, setSendingReportId] = useState<string | null>(null)
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+
+  // Auto-ocultar notificación después de 5 segundos
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => setNotification(null), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [notification])
 
   useEffect(() => {
     if (id) {
@@ -96,13 +109,42 @@ export default function MachineDetail() {
 
   /**
    * ENVIAR INFORME POR EMAIL
-   * Abre el cliente de correo con datos pre-cargados
+   * Llama a la Edge Function de Supabase que envía el PDF por Gmail SMTP
    */
-  const handleEmailReport = (report: Report) => {
-    const subject = encodeURIComponent(`Informe de Mantenimiento - ${machine?.reference}`)
-    const body = encodeURIComponent(`Adjunto informe de mantenimiento para la máquina ${machine?.reference} - ${machine?.name}`)
-    const email = machine?.email || ''
-    window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank')
+  const handleEmailReport = async (report: Report) => {
+    if (!report.pdf_url) {
+      setNotification({ type: 'error', message: 'El informe no tiene PDF asociado' })
+      return
+    }
+
+    if (!machine?.email) {
+      setNotification({ type: 'error', message: 'La máquina no tiene email registrado' })
+      return
+    }
+
+    setSendingReportId(report.id)
+    setNotification(null)
+
+    try {
+      await sendReportEmail({
+        pdfUrl: report.pdf_url,
+        email: machine.email,
+        machineReference: machine.reference,
+        machineName: machine.name,
+        reportDate: new Date(report.report_date).toLocaleDateString('es-ES'),
+        technician: report.technician || undefined,
+      })
+
+      setNotification({
+        type: 'success',
+        message: `Informe enviado a ${machine.email}`,
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error al enviar el email'
+      setNotification({ type: 'error', message })
+    } finally {
+      setSendingReportId(null)
+    }
   }
 
   /**
@@ -201,6 +243,46 @@ export default function MachineDetail() {
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+        {/* Notificación de email */}
+        {notification && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 20px',
+              borderRadius: '8px',
+              marginBottom: '20px',
+              backgroundColor: notification.type === 'success' ? '#ecfdf5' : '#fef2f2',
+              border: notification.type === 'success' ? '1px solid #16a34a' : '1px solid #dc2626',
+              color: notification.type === 'success' ? '#166534' : '#991b1b',
+              fontSize: '14px',
+              fontWeight: '500',
+              transition: 'opacity 0.3s ease',
+            }}
+          >
+            {notification.type === 'success' ? (
+              <CheckCircle size={20} style={{ color: '#16a34a', flexShrink: 0 }} />
+            ) : (
+              <AlertCircle size={20} style={{ color: '#dc2626', flexShrink: 0 }} />
+            )}
+            <span style={{ flex: 1 }}>{notification.message}</span>
+            <button
+              onClick={() => setNotification(null)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px',
+                color: 'inherit',
+                opacity: 0.7,
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -305,6 +387,7 @@ export default function MachineDetail() {
                         onEmail={() => handleEmailReport(report)}
                         onDownload={() => handleDownloadReport(report)}
                         onDelete={() => openPinModal(report.id)}
+                        isSending={sendingReportId === report.id}
                       />
                     </div>
                   </div>

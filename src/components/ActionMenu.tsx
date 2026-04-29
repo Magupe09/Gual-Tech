@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
-import { MoreVertical, Trash2, Edit, Download, Mail } from 'lucide-react'
+import { MoreVertical, Trash2, Edit, Download, Mail, Loader2 } from 'lucide-react'
 
 interface ActionMenuProps {
   onEdit?: () => void
   onDelete?: () => void
   onDownload?: () => void
   onEmail?: () => void
+  /** Indica si se está enviando el email (muestra spinner) */
+  isSending?: boolean
 }
 
 /**
@@ -17,8 +19,9 @@ interface ActionMenuProps {
  * @param onDelete - Callback para eliminar
  * @param onDownload - Callback para descargar PDF
  * @param onEmail - Callback para enviar por email
+ * @param isSending - Muestra spinner en botón de email mientras envía
  */
-export default function ActionMenu({ onEdit, onDelete, onDownload, onEmail }: ActionMenuProps) {
+export default function ActionMenu({ onEdit, onDelete, onDownload, onEmail, isSending }: ActionMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -85,9 +88,12 @@ export default function ActionMenu({ onEdit, onDelete, onDownload, onEmail }: Ac
           {onEmail && (
             <button
               onClick={() => {
-                onEmail()
-                setIsOpen(false)
+                if (!isSending) {
+                  onEmail()
+                  setIsOpen(false)
+                }
               }}
+              disabled={isSending}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -96,8 +102,8 @@ export default function ActionMenu({ onEdit, onDelete, onDownload, onEmail }: Ac
                 padding: '12px 16px',
                 backgroundColor: 'transparent',
                 border: 'none',
-                cursor: 'pointer',
-                color: '#532D8C',
+                cursor: isSending ? 'wait' : 'pointer',
+                color: isSending ? '#999999' : '#532D8C',
                 fontSize: '14px',
                 fontWeight: '500',
                 borderBottom: '1px solid #f0f0f0',
@@ -105,14 +111,18 @@ export default function ActionMenu({ onEdit, onDelete, onDownload, onEmail }: Ac
                 borderRadius: '8px 8px 0 0'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#f5f5f5'
+                if (!isSending) e.currentTarget.style.backgroundColor = '#f5f5f5'
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent'
               }}
             >
-              <Mail size={16} />
-              Enviar por Email
+              {isSending ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Mail size={16} />
+              )}
+              {isSending ? 'Enviando...' : 'Enviar por Email'}
             </button>
           )}
 

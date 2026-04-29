@@ -206,3 +206,16 @@ AddMachine → MachineDetail (/machine/:id) tras crear
 
 ---
 *Parte del Cerebro: Javi Control | 1.1 Estructura → 1.1.1 Pages → AddMachine*
+
+Examen
+
+1: Esta tecnica permite crear una copia del array original y asi trabajar con el sin comprometer el original esto nos da mayor control.
+2: lo convierte a numero ya que es un string y al hacer la validacion generia error.
+3: por defecto el navegador tiene un disparador que recarga la pagina en cada envio o submit. El preventDefault() evita esto.
+4: Si o si el loading debe desaparecer independiente de la validacion, por eso lo pusisten finally.
+5: No lo se esto es nuevo para mi. 
+6: jum no lo se :/ es por que debe tener una forma o typado? 
+7: Al tener la opcion de probar las funcionalidades sin un base real podemos hacer pruebas rapidas que permiten explorar la app en funcionamiento sin depender de una base de datos, y simular su uso.
+8: Por que estaria apuntando siempre al valor inmediatamente anterior sin actualizar?
+9 : El useNavigate permite navegar entre pages, pero el usuario puede hacer en el navegador con las flechas.
+10: Jum nisiquiera sabia que es un form debil que puede ser quebrado facil, dime cual es su debilidad y un form fuerte? Obvio  no lo se.
