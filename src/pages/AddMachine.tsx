@@ -206,7 +206,7 @@ export default function AddMachine() {
             paddingTop: '48px',
             paddingBottom: '24px',
             marginTop: '48px',
-            borderTop: '1px solid #532D8C'
+            borderTop: '1px solid var(--color-primary)'
           }}>
             <button type="button" onClick={() => navigate(-1)} className="btn-secondary px-6 py-2">
               Cancelar

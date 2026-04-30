@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
-/* Custom color palette - Tailwind v4 */
+/* ============================================
+   Custom color palette — Tailwind v4
+   ============================================ */
 @theme {
   --color-bg-dark: #ffffff;
   --color-primary: #532D8C;
@@ -12,11 +14,31 @@
   --color-text-muted: #666666;
 }
 
-/* Base styles */
+/* ============================================
+   Dark Mode — Paleta Morada Moderna
+   ============================================ */
+[data-theme="dark"] {
+  --color-bg-dark: #0d0d1a;
+  --color-primary: #8B6FCE;
+  --color-accent: #7B5CC9;
+  --color-accent-light: #6b47b3;
+  --color-surface: #1a1a2e;
+  --color-surface-light: #252542;
+  --color-text: #e4e4ec;
+  --color-text-muted: #9898b0;
+}
+
+/* ============================================
+   Base
+   ============================================ */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html {
+  transition: background-color 0.3s ease;
 }
 
 body {
@@ -24,14 +46,19 @@ body {
   background-color: var(--color-bg-dark);
   color: var(--color-text);
   min-height: 100vh;
+  transition: background-color 0.35s ease, color 0.35s ease;
 }
 
-/* Utility classes */
+/* ============================================
+   Utility Classes
+   ============================================ */
+
 .card {
   background-color: var(--color-surface);
   border-radius: 12px;
   padding: 1.5rem;
   border: 1px solid var(--color-primary);
+  transition: background-color 0.35s ease, border-color 0.35s ease;
 }
 
 .btn-primary {
@@ -85,14 +112,22 @@ body {
   color: var(--color-text-muted);
 }
 
-/* Dashboard styles */
+/* ============================================
+   Dashboard styles
+   ============================================ */
+
 .dashboard-container {
   max-width: 72rem;
   margin: 2rem auto;
   padding: 2rem;
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.35s ease;
+}
+
+[data-theme="dark"] .dashboard-container {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .action-buttons {
@@ -125,4 +160,24 @@ body {
 .machines-list {
   display: grid;
   gap: 1rem;
+}
+
+/* ============================================
+   Dark mode — ajustes puntuales de inline styles
+   que usan colores fijos y necesitan transicionar
+   ============================================ */
+
+[data-theme="dark"] select {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-primary);
+}
+
+[data-theme="dark"] select option {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] a {
+  color: var(--color-primary);
 }

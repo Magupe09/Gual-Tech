@@ -245,7 +245,7 @@ export default function MachineDetail() {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
-        <div style={{ color: '#532D8C', fontSize: '20px' }}>Cargando...</div>
+        <div style={{ color: 'var(--color-primary)', fontSize: '20px' }}>Cargando...</div>
       </div>
     )
   }
@@ -304,12 +304,12 @@ export default function MachineDetail() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <button onClick={() => navigate('/dashboard')} style={{ padding: '8px', backgroundColor: 'transparent', border: '1px solid #532D8C', borderRadius: '8px', cursor: 'pointer' }}>
-              <ArrowLeft size={20} style={{ color: '#532D8C' }} />
+            <button onClick={() => navigate('/dashboard')} style={{ padding: '8px', backgroundColor: 'transparent', border: '1px solid var(--color-primary)', borderRadius: '8px', cursor: 'pointer' }}>
+              <ArrowLeft size={20} style={{ color: 'var(--color-primary)' }} />
             </button>
             <div>
-              <h1 style={{ color: '#532D8C', fontSize: '24px', fontWeight: 'bold' }}>{machine.reference}</h1>
-              <p style={{ color: '#666666', fontSize: '14px' }}>{machine.name}</p>
+              <h1 style={{ color: 'var(--color-primary)', fontSize: '24px', fontWeight: 'bold' }}>{machine.reference}</h1>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>{machine.name}</p>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -346,60 +346,61 @@ export default function MachineDetail() {
         </div>
 
         {/* Machine Info */}
-        <div style={{ backgroundColor: '#ffffff', border: '1px solid #532D8C', borderRadius: '12px', padding: '24px', marginBottom: '32px' }}>
+        <div style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-primary)', borderRadius: '12px', padding: '24px', marginBottom: '32px', transition: 'background-color 0.35s ease, border-color 0.35s ease' }}>
           <div style={{ marginBottom: '24px' }}>
-            <h2 style={{ color: '#532D8C', fontSize: '20px', fontWeight: 'bold' }}>Información de la Máquina</h2>
+            <h2 style={{ color: 'var(--color-primary)', fontSize: '20px', fontWeight: 'bold' }}>Información de la Máquina</h2>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4" style={{ color: '#1a1a1a' }}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4" style={{ color: 'var(--color-text)' }}>
             <div>
-              <p style={{ color: '#666666', fontSize: '14px' }}>Número de Serie</p>
-              <p style={{ color: '#1a1a1a', fontWeight: '500', fontSize: '16px' }}>{machine.serial_number}</p>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>Número de Serie</p>
+              <p style={{ color: 'var(--color-text)', fontWeight: '500', fontSize: '16px' }}>{machine.serial_number}</p>
             </div>
             <div>
-              <p style={{ color: '#666666', fontSize: '14px' }}>Marca</p>
-              <p style={{ color: '#1a1a1a', fontWeight: '500', fontSize: '16px' }}>{machine.brand || '-'}</p>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>Marca</p>
+              <p style={{ color: 'var(--color-text)', fontWeight: '500', fontSize: '16px' }}>{machine.brand || '-'}</p>
             </div>
             <div>
-              <p style={{ color: '#666666', fontSize: '14px' }}>Modelo</p>
-              <p style={{ color: '#1a1a1a', fontWeight: '500', fontSize: '16px' }}>{machine.model || '-'}</p>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>Modelo</p>
+              <p style={{ color: 'var(--color-text)', fontWeight: '500', fontSize: '16px' }}>{machine.model || '-'}</p>
             </div>
             <div style={{ gridColumn: 'span 2' }}>
-              <p style={{ color: '#666666', fontSize: '14px' }}>Dirección</p>
-              <p style={{ color: '#1a1a1a', fontWeight: '500', fontSize: '16px' }}>{machine.location || '-'}</p>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>Dirección</p>
+              <p style={{ color: 'var(--color-text)', fontWeight: '500', fontSize: '16px' }}>{machine.location || '-'}</p>
             </div>
           </div>
         </div>
 
         {/* Reports History */}
-        <div style={{ backgroundColor: '#ffffff', border: '1px solid #532D8C', borderRadius: '12px', padding: '24px' }}>
+        <div style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-primary)', borderRadius: '12px', padding: '24px', transition: 'background-color 0.35s ease, border-color 0.35s ease' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
-            <h2 style={{ color: '#532D8C', fontSize: '20px', fontWeight: 'bold' }}>Historial de Informes</h2>
+            <h2 style={{ color: 'var(--color-primary)', fontSize: '20px', fontWeight: 'bold' }}>Historial de Informes</h2>
             
             {/* Filtro por mes */}
             {availableMonths.length > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Filter size={16} style={{ color: '#532D8C' }} />
+                <Filter size={16} style={{ color: 'var(--color-primary)' }} />
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
                   style={{
                     padding: '8px 12px',
-                    border: '1px solid #532D8C',
+                    border: '1px solid var(--color-primary)',
                     borderRadius: '8px',
-                    color: '#532D8C',
+                    color: 'var(--color-primary)',
                     fontSize: '14px',
-                    backgroundColor: '#ffffff',
+                    backgroundColor: 'var(--color-surface)',
                     cursor: 'pointer',
                     outline: 'none',
-                    minWidth: '180px'
+                    minWidth: '180px',
+                    transition: 'all 0.2s ease'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = '#7B5CC9'
                     e.currentTarget.style.boxShadow = '0 0 0 3px rgba(123, 92, 201, 0.2)'
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.style.borderColor = '#532D8C'
+                    e.currentTarget.style.borderColor = 'var(--color-primary)'
                     e.currentTarget.style.boxShadow = 'none'
                   }}
                 >
@@ -416,20 +417,20 @@ export default function MachineDetail() {
           </div>
           
           {reports.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '32px 0', color: '#666666' }}>
-              <FileText size={48} style={{ margin: '0 auto 16px', opacity: 0.5, color: '#532D8C' }} />
+            <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--color-text-muted)' }}>
+              <FileText size={48} style={{ margin: '0 auto 16px', opacity: 0.5, color: 'var(--color-primary)' }} />
               <p style={{ marginBottom: '8px' }}>No hay informes registrados</p>
-              <Link to={`/machine/${id}/add-report`} style={{ color: '#532D8C', textDecoration: 'underline' }}>
+              <Link to={`/machine/${id}/add-report`} style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}>
                 Crear el primer informe
               </Link>
             </div>
           ) : filteredReports.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '32px 0', color: '#666666' }}>
-              <Filter size={48} style={{ margin: '0 auto 16px', opacity: 0.5, color: '#532D8C' }} />
+            <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--color-text-muted)' }}>
+              <Filter size={48} style={{ margin: '0 auto 16px', opacity: 0.5, color: 'var(--color-primary)' }} />
               <p style={{ marginBottom: '8px' }}>No hay informes para el mes seleccionado</p>
               <button
                 onClick={() => setSelectedMonth('')}
-                style={{ color: '#532D8C', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}
+                style={{ color: 'var(--color-primary)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}
               >
                 Mostrar todos los informes
               </button>
@@ -437,20 +438,20 @@ export default function MachineDetail() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {filteredReports.map(report => (
-                <div key={report.id} style={{ padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+                <div key={report.id} style={{ padding: '16px', backgroundColor: 'var(--color-surface-light)', borderRadius: '8px', transition: 'background-color 0.35s ease' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '12px', color: '#ffffff', backgroundColor: report.maintenance_type === 'preventivo' ? '#16a34a' : report.maintenance_type === 'correctivo' ? '#dc2626' : '#7B5CC9' }}>
                         {report.maintenance_type}
                       </span>
-                      <span style={{ color: '#666666', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ color: 'var(--color-text-muted)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Calendar size={14} />
                         {new Date(report.report_date).toLocaleDateString('es-ES')}
                       </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       {report.cost > 0 && (
-                        <span style={{ color: '#1a1a1a', fontWeight: '500' }}>${report.cost.toFixed(2)}</span>
+                        <span style={{ color: 'var(--color-text)', fontWeight: '500' }}>${report.cost.toFixed(2)}</span>
                       )}
                       <ActionMenu 
                         onEmail={() => handleEmailReport(report)}
@@ -462,20 +463,20 @@ export default function MachineDetail() {
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', fontSize: '14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#666666' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-text-muted)' }}>
                       <User size={14} />
-                      <span style={{ color: '#1a1a1a' }}>{report.technician}</span>
+                      <span style={{ color: 'var(--color-text)' }}>{report.technician}</span>
                     </div>
                     {report.parts_changed && report.parts_changed.length > 0 && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#666666' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-text-muted)' }}>
                         <Package size={14} />
-                        <span style={{ color: '#1a1a1a' }}>{report.parts_changed.length} pieza(s)</span>
+                        <span style={{ color: 'var(--color-text)' }}>{report.parts_changed.length} pieza(s)</span>
                       </div>
                     )}
                   </div>
 
                   {report.notes && (
-                    <p style={{ color: '#666666', fontSize: '14px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #532D8C' }}>
+                    <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--color-primary)' }}>
                       {report.notes}
                     </p>
                   )}
@@ -488,7 +489,7 @@ export default function MachineDetail() {
                           href={photo}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ width: '64px', height: '64px', borderRadius: '4px', overflow: 'hidden', border: '1px solid #532D8C' }}
+                          style={{ width: '64px', height: '64px', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--color-primary)' }}
                         >
                           <img src={photo} alt={`Foto ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </a>
@@ -571,7 +572,7 @@ export default function MachineDetail() {
             <h2 style={{ color: '#dc2626', fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>
               Confirmar Eliminación
             </h2>
-            <p style={{ color: '#666666', fontSize: '14px', marginBottom: '24px', lineHeight: '1.5' }}>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', marginBottom: '24px', lineHeight: '1.5' }}>
               Ingresá el código de seguridad para eliminar el informe
             </p>
 
@@ -627,8 +628,8 @@ export default function MachineDetail() {
                 }}
                 style={{
                   padding: '10px 20px',
-                  backgroundColor: '#f0f0f0',
-                  color: '#1a1a1a',
+                  backgroundColor: 'var(--color-surface-light)',
+                  color: 'var(--color-text)',
                   border: 'none',
                   borderRadius: '8px',
                   fontWeight: '600',

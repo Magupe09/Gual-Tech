@@ -679,7 +679,7 @@ export default function AddReport() {
             paddingTop: '48px',
             paddingBottom: '24px',
             marginTop: '48px',
-            borderTop: '1px solid #532D8C'
+            borderTop: '1px solid var(--color-primary)'
           }}>
             <button type="button" onClick={handleDownloadPDF} className="btn-secondary flex items-center gap-2">
               <Download size={18} />
