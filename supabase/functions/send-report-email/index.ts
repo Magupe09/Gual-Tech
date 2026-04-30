@@ -71,7 +71,7 @@ function buildEmailHTML(params: EmailRequest): string {
     <tr>
       <td style="background-color: #532D8C; padding: 24px; text-align: center;">
         <h1 style="color: #ffffff; margin: 0; font-size: 22px;">INFORME DE MANTENIMIENTO</h1>
-        <p style="color: #d4c4f0; margin: 8px 0 0 0; font-size: 14px;">Javi Control · Gualtech</p>
+        <p style="color: #d4c4f0; margin: 8px 0 0 0; font-size: 14px;">GUALTECH</p>
       </td>
     </tr>
 
@@ -120,7 +120,7 @@ function buildEmailHTML(params: EmailRequest): string {
     <tr>
       <td style="background-color: #f5f5f5; padding: 16px 24px; text-align: center; border-top: 1px solid #e0e0e0;">
         <p style="color: #999999; font-size: 12px; margin: 0;">
-          Este email fue enviado automáticamente por Javi Control.
+          Este email fue enviado automáticamente por GUALTECH.
         </p>
       </td>
     </tr>
@@ -192,7 +192,7 @@ serve(async (req: Request) => {
     console.log(`📧 Enviando email a ${body.email}...`)
 
     const info = await transporter.sendMail({
-      from: `"Javi Control" <${smtpUser}>`,
+      from: `"GUALTECH" <${smtpUser}>`,
       to: body.email,
       subject: `Informe de Mantenimiento - ${body.machineReference}`,
       html: buildEmailHTML(body),

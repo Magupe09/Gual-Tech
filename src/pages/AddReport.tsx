@@ -185,7 +185,7 @@ export default function AddReport() {
     doc.setTextColor(140, 140, 140)
     doc.setFontSize(7)
     doc.text('Gualtech', pageWidth - MARGIN - 4, footerY + 12, { align: 'right' })
-    doc.text('Javi Control', pageWidth - MARGIN - 4, footerY + 19, { align: 'right' })
+    doc.text('GUALTECH', pageWidth - MARGIN - 4, footerY + 19, { align: 'right' })
   }
 
   const drawSectionTitle = (doc: jsPDF, y: number, title: string, pageWidth: number) => {
@@ -516,8 +516,8 @@ export default function AddReport() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-dark p-6">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-bg-dark p-6 flex items-center justify-center">
+      <div className="w-full max-w-2xl">
         <div className="flex items-center gap-4 mb-8">
           <button onClick={() => navigate(-1)} className="btn-secondary p-2">
             <ArrowLeft size={20} />

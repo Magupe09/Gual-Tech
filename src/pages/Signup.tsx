@@ -104,10 +104,10 @@ export default function Signup() {
         <div style={{ textAlign: 'center', marginBottom: isMobile ? '24px' : '32px' }}>
           <img 
             src="/logojavi.PNG" 
-            alt="Javi Control" 
+            alt="GUALTECH" 
             style={{ width: isMobile ? '80px' : '128px', height: isMobile ? '80px' : '128px', objectFit: 'contain', marginBottom: '16px' }}
           />
-          <h1 style={{ color: '#532D8C', fontSize: isMobile ? '20px' : '24px', fontWeight: 'bold' }}>Javi Control</h1>
+          <h1 style={{ color: '#532D8C', fontSize: isMobile ? '20px' : '24px', fontWeight: 'bold' }}>GUALTECH</h1>
           <p style={{ color: '#7B5CC9', fontSize: isMobile ? '12px' : '14px', marginTop: '8px' }}>Crea tu cuenta</p>
         </div>
 

@@ -177,7 +177,3 @@ body {
   background-color: var(--color-surface);
   color: var(--color-text);
 }
-
-[data-theme="dark"] a {
-  color: var(--color-primary);
-}
