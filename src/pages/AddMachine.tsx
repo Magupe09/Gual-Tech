@@ -54,8 +54,8 @@ export default function AddMachine() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-dark p-6">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-bg-dark p-6 flex items-center justify-center">
+      <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <button onClick={() => navigate(-1)} className="btn-secondary p-2">
