@@ -672,7 +672,15 @@ export default function AddReport() {
             )}
           </div>
 
-          <div className="flex justify-end gap-4 pt-4 border-t border-primary">
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '16px',
+            paddingTop: '48px',
+            paddingBottom: '24px',
+            marginTop: '48px',
+            borderTop: '1px solid #532D8C'
+          }}>
             <button type="button" onClick={handleDownloadPDF} className="btn-secondary flex items-center gap-2">
               <Download size={18} />
               Descargar PDF
