@@ -100,14 +100,14 @@ export default function AddMachine() {
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-2">Nombre *</label>
+              <label className="block text-sm font-medium mb-2">Nombre de Empresa *</label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
                 className="input-field"
-                placeholder="Nombre descriptivo de la máquina"
+                placeholder="Nombre de la empresa"
                 required
               />
             </div>

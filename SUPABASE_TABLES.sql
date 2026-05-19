@@ -7,8 +7,8 @@
 -- ============================================
 CREATE TABLE public.machines (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  reference TEXT NOT NULL UNIQUE,
-  serial_number TEXT NOT NULL,
+  reference TEXT NOT NULL,
+  serial_number TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
   brand TEXT,
   model TEXT,
