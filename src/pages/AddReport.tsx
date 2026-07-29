@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Download, X, Image, Loader } from 'lucide-react'
 import imageCompression from 'browser-image-compression'
 import { jsPDF } from 'jspdf'
+import { generateReportPDF } from '../services/pdfGenerator'
 
 const FONT = 'helvetica'
 const BOLD = 'bold'
@@ -31,6 +32,13 @@ export default function AddReport() {
   })
 
   const [partInput, setPartInput] = useState('')
+
+  // Firma digital
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [isDrawing, setIsDrawing] = useState(false)
+  const [signatureData, setSignatureData] = useState<string | null>(null)
+  const [lastX, setLastX] = useState(0)
+  const [lastY, setLastY] = useState(0)
 
   useEffect(() => {
     if (id) fetchMachine()
@@ -125,6 +133,77 @@ export default function AddReport() {
     }))
   }
 
+  // --- FIRMA DIGITAL ---
+  const getCanvasCoords = (e: React.MouseEvent | React.TouchEvent, canvas: HTMLCanvasElement) => {
+    const rect = canvas.getBoundingClientRect()
+    if ('touches' in e) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+      }
+    }
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    }
+  }
+
+  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault()
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const { x, y } = getCanvasCoords(e, canvas)
+    setIsDrawing(true)
+    setLastX(x)
+    setLastY(y)
+  }
+
+  const draw = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault()
+    if (!isDrawing) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const { x, y } = getCanvasCoords(e, canvas)
+
+    ctx.beginPath()
+    ctx.moveTo(lastX, lastY)
+    ctx.lineTo(x, y)
+    ctx.strokeStyle = '#1a1a1a'
+    ctx.lineWidth = 2
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    ctx.stroke()
+
+    setLastX(x)
+    setLastY(y)
+  }
+
+  const stopDrawing = () => {
+    if (!isDrawing) return
+    setIsDrawing(false)
+    const canvas = canvasRef.current
+    if (canvas) {
+      setSignatureData(canvas.toDataURL('image/png'))
+      setFormData(prev => ({ ...prev, owner_signature: canvas.toDataURL('image/png') }))
+    }
+  }
+
+  const clearSignature = () => {
+    const canvas = canvasRef.current
+    if (canvas) {
+      const ctx = canvas.getContext('2d')
+      ctx?.clearRect(0, 0, canvas.width, canvas.height)
+    }
+    setSignatureData(null)
+    setFormData(prev => ({ ...prev, owner_signature: undefined }))
+  }
+
   const uploadPhotos = async (): Promise<string[]> => {
     if (!supabase) return photosPreview
     
@@ -148,67 +227,8 @@ export default function AddReport() {
     return urls
   }
 
-  const PRIMARY = '#532D8C'
-  const PRIMARY_RGB: [number, number, number] = [83, 45, 140]
-  const GRAY_LIGHT = '#f5f5f5'
-  const GRAY_TEXT = '#666666'
-  const MARGIN = 14
-  const HEADER_H = 66    // content starts at y=66 (6px top margin + 50px header + 10px spacing)
-  const FOOTER_H = 36    // taller footer with technician info
-  const CONTENT_W = (pw: number) => pw - MARGIN * 2
-
-  const drawFooter = (doc: jsPDF, pageWidth: number, pageHeight: number) => {
-    const footerY = pageHeight - 36
-    const footerH = 30
-    const footerX = MARGIN - 4
-
-    // Background band
-    doc.setFillColor(245, 240, 250)
-    doc.roundedRect(footerX, footerY, pageWidth - (MARGIN - 4) * 2, footerH, 5, 5, 'F')
-
-    // Top accent line
-    doc.setDrawColor(...PRIMARY_RGB)
-    doc.setLineWidth(0.8)
-    doc.line(MARGIN, footerY, pageWidth - MARGIN, footerY)
-
-    // Left side: Technician info
-    doc.setTextColor(...PRIMARY_RGB)
-    doc.setFontSize(9)
-    doc.setFont(FONT, BOLD)
-    doc.text('Técnico', MARGIN + 4, footerY + 9)
-    doc.setFont(FONT, NORMAL)
-    doc.setTextColor(60, 60, 60)
-    doc.setFontSize(11)
-    doc.text(formData.technician || '—', MARGIN + 4, footerY + 21)
-
-    // Right side: Company branding
-    doc.setTextColor(140, 140, 140)
-    doc.setFontSize(7)
-    doc.text('Gualtech', pageWidth - MARGIN - 4, footerY + 12, { align: 'right' })
-    doc.text('GUALTECH', pageWidth - MARGIN - 4, footerY + 19, { align: 'right' })
-  }
-
-  const drawSectionTitle = (doc: jsPDF, y: number, title: string, pageWidth: number) => {
-    const cw = CONTENT_W(pageWidth)
-    doc.setDrawColor(220, 210, 235)
-    doc.line(MARGIN, y, pageWidth - MARGIN, y)
-    doc.setFontSize(11)
-    doc.setTextColor(...PRIMARY_RGB)
-    doc.setFont(FONT, BOLD)
-    doc.text(title, MARGIN, y + 7)
-    doc.setFont(FONT, NORMAL)
-    return y + 14
-  }
 
   const generatePDF = async (): Promise<jsPDF> => {
-    const doc = new jsPDF()
-    const pageWidth = doc.internal.pageSize.getWidth()
-    const pageHeight = doc.internal.pageSize.getHeight()
-    const cw = CONTENT_W(pageWidth)
-
-    // ==========================================
-    // Consecutivo (desde DB)
-    // ==========================================
     let consecutivo = '001'
     try {
       const { count } = await supabase
@@ -216,243 +236,30 @@ export default function AddReport() {
         .select('*', { count: 'exact', head: true })
         .eq('machine_id', id)
       consecutivo = String((count || 0) + 1).padStart(3, '0')
-    } catch {
-      consecutivo = '001'
-    }
+    } catch {}
 
-    // ==========================================
-    // Logo (cargar una vez, mantener proporción)
-    // ==========================================
-    let logoBase64: string | null = null
-    let logoW = 0, logoH = 0
-    try {
-      const img = new window.Image()
-      img.src = '/logojavi.PNG'
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve()
-        img.onerror = () => reject()
-      })
-      // Render a resolución NATIVA (evitar pérdida)
-      const scale = 2 // retina para calidad
-      const canvas = document.createElement('canvas')
-      canvas.width = (img.width || 160) * scale
-      canvas.height = (img.height || 60) * scale
-      const ctx = canvas.getContext('2d')!
-      ctx.imageSmoothingEnabled = true
-      ctx.imageSmoothingQuality = 'high'
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-      logoBase64 = canvas.toDataURL('image/png')
-      logoW = img.width || 160
-      logoH = img.height || 60
-    } catch {
-      logoBase64 = null
-    }
-
-    // Logo dimensions will be calculated inside drawHeader
-
-    // ==========================================
-    // drawHeader: se llama en cada página
-    // ==========================================
-    const drawHeader = () => {
-      // Header background with margins — NOT edge-to-edge
-      const headerX = MARGIN - 4
-      const headerW = pageWidth - (MARGIN - 4) * 2
-      const headerY = 6
-      const headerH = 50
-
-      // Background box: purple, rounded corners
-      doc.setFillColor(...PRIMARY_RGB)
-      doc.roundedRect(headerX, headerY, headerW, headerH, 6, 6, 'F')
-
-      // --- LOGO with rounded border ---
-      const logoPrintH = 28
-      const logoPrintW = logoW > 0 ? (logoW / logoH) * logoPrintH : 50
-      const logoXPad = headerX + 8
-      const logoYPad = headerY + (headerH - logoPrintH) / 2
-
-      if (logoBase64) {
-        // White rounded rect behind logo (border effect)
-        doc.setFillColor(255, 255, 255)
-        doc.roundedRect(logoXPad - 2, logoYPad - 2, logoPrintW + 4, logoPrintH + 4, 3, 3, 'F')
-        // Logo image
-        doc.addImage(logoBase64, 'PNG', logoXPad, logoYPad, logoPrintW, logoPrintH)
-      } else {
-        // Fallback: white rounded rect with initial
-        doc.setFillColor(255, 255, 255)
-        doc.roundedRect(logoXPad - 2, logoYPad - 2, logoPrintW + 4, logoPrintH + 4, 3, 3, 'F')
-        doc.setTextColor(...PRIMARY_RGB)
-        doc.setFontSize(14)
-        doc.setFont(FONT, BOLD)
-        doc.text('G', logoXPad + logoPrintW / 2, logoYPad + logoPrintH / 2 + 4, { align: 'center' })
-      }
-
-      // --- TITLE: "INFORME DE MANTENIMIENTO" next to logo ---
-      const headerCY = headerY + headerH / 2
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(14)
-      doc.setFont(FONT, BOLD)
-      const titleX = logoXPad + logoPrintW + 14
-      doc.text('INFORME DE MANTENIMIENTO', titleX, headerCY - 3)
-      doc.setFont(FONT, NORMAL)
-
-      // --- Consecutive + date on the right ---
-      const creationDate = new Date().toLocaleDateString('es-ES')
-      doc.setFontSize(10)
-      doc.text(`N° ${consecutivo}`, headerX + headerW - 6, headerCY - 3, { align: 'right' })
-      doc.setFontSize(7)
-      doc.setTextColor(220, 210, 235)
-      doc.text(creationDate, headerX + headerW - 6, headerCY + 8, { align: 'right' })
-    }
-
-    // Dibujar primera página
-    drawHeader()
-    drawFooter(doc, pageWidth, pageHeight)
-
-    // ==========================================
-    // CONTENIDO
-    // ==========================================
-    let y = HEADER_H
-
-    // ---- CARD: MÁQUINA ----
-    const cardX = MARGIN
-    const cardW = cw
-    const cardY = y
-    const cardH = 34
-
-    // Sombra/sutil: rectángulo gris de fondo
-    doc.setFillColor(248, 247, 250)
-    doc.setDrawColor(...PRIMARY_RGB)
-    doc.roundedRect(cardX, cardY, cardW, cardH, 3, 3, 'FD')
-
-    // Barra lateral púrpura
-    doc.setFillColor(...PRIMARY_RGB)
-    doc.rect(cardX, cardY, 4, cardH, 'F')
-
-    doc.setTextColor(...PRIMARY_RGB)
-    doc.setFontSize(10)
-    doc.setFont(FONT, BOLD)
-    doc.text('MÁQUINA', cardX + 14, cardY + 8)
-    doc.setFont(FONT, NORMAL)
-
-    doc.setTextColor(40, 40, 40)
-    doc.setFontSize(10)
-    doc.text(`${machine?.reference} - ${machine?.name}`, cardX + 14, cardY + 20)
-    doc.setFontSize(9)
-    doc.setTextColor(100, 100, 100)
-    doc.text(`Serie: ${machine?.serial_number}  |  ${machine?.brand || '-'} ${machine?.model || '-'}`, cardX + 14, cardY + 30)
-
-    y = cardY + cardH + 10
-
-    // ---- DETALLE DEL SERVICIO ----
-    y = drawSectionTitle(doc, y, 'DETALLE DEL SERVICIO', pageWidth)
-
-    doc.setTextColor(60, 60, 60)
-    doc.setFontSize(10)
-
-    // Fecha | Tipo (en columnas)
-    const col1X = MARGIN + 4
-    const col2X = MARGIN + 50
-    const col3X = pageWidth / 2 + 4
-    const col4X = pageWidth / 2 + 45
-
-    doc.setFont(FONT, BOLD)
-    doc.text('Fecha:', col1X, y)
-    doc.setFont(FONT, NORMAL)
-    doc.text(new Date(formData.report_date).toLocaleDateString('es-ES'), col2X, y)
-    doc.setFont(FONT, BOLD)
-    doc.text('Tipo:', col3X, y)
-    doc.setFont(FONT, NORMAL)
-    doc.text(formData.maintenance_type, col4X, y)
-    y += 9
-
-    y += 5
-
-    // ---- PIEZAS CAMBIADAS ----
-    if (formData.parts_changed.length > 0) {
-      y = drawSectionTitle(doc, y, 'PIEZAS CAMBIADAS', pageWidth)
-
-      doc.setTextColor(60, 60, 60)
-      doc.setFontSize(10)
-      formData.parts_changed.forEach((part) => {
-        doc.text(`•  ${part}`, MARGIN + 8, y)
-        y += 7
-      })
-      y += 6
-    }
-
-    // ---- NOTAS ----
-    if (formData.notes) {
-      if (y > pageHeight - FOOTER_H - 40) {
-        doc.addPage()
-        drawHeader()
-        drawFooter(doc, pageWidth, pageHeight)
-        y = HEADER_H
-      }
-
-      y = drawSectionTitle(doc, y, 'NOTAS', pageWidth)
-
-      doc.setTextColor(60, 60, 60)
-      doc.setFontSize(10)
-      const splitNotes = doc.splitTextToSize(formData.notes, cw - 8)
-      doc.text(splitNotes, MARGIN + 8, y)
-      y += splitNotes.length * 5 + 10
-    }
-
-    // ---- REGISTRO FOTOGRÁFICO ----
-    if (photosPreview.length > 0) {
-      if (y > pageHeight - FOOTER_H - 30) {
-        doc.addPage()
-        drawHeader()
-        drawFooter(doc, pageWidth, pageHeight)
-        y = HEADER_H
-      }
-
-      y = drawSectionTitle(doc, y, 'REGISTRO FOTOGRÁFICO', pageWidth)
-
-      const imgW = (cw - 20) / 2
-      const imgH = imgW * 0.65
-      const gapX = 10
-      const gapY = 12
-
-      for (let i = 0; i < photosPreview.length; i++) {
-        const col = i % 2
-        const row = Math.floor(i / 2)
-
-        // Salto de página si no entra la fila
-        if (y + imgH + gapY > pageHeight - FOOTER_H) {
-          doc.addPage()
-          drawHeader()
-          drawFooter(doc, pageWidth, pageHeight)
-          y = HEADER_H
-          y = drawSectionTitle(doc, y, 'REGISTRO FOTOGRÁFICO (cont.)', pageWidth)
-        }
-
-        const ix = MARGIN + col * (imgW + gapX)
-        const iy = y + row * (imgH + gapY)
-
-        // Borde sutil alrededor de la foto
-        doc.setDrawColor(200, 200, 200)
-        doc.setFillColor(248, 247, 250)
-        doc.roundedRect(ix - 1, iy - 1, imgW + 2, imgH + 14, 2, 2, 'FD')
-
-        try {
-          doc.addImage(photosPreview[i], 'JPEG', ix, iy, imgW, imgH)
-        } catch {
-          doc.setFontSize(8)
-          doc.setTextColor(180, 180, 180)
-          doc.text('Imagen no disponible', ix + 10, iy + imgH / 2)
-        }
-
-        doc.setFontSize(7)
-        doc.setTextColor(140, 140, 140)
-        doc.text(`Foto ${i + 1}`, ix + 2, iy + imgH + 8)
-      }
-
-      const totalRows = Math.ceil(photosPreview.length / 2)
-      y = y + totalRows * (imgH + gapY) + 6
-    }
-
-    return doc
+    return generateReportPDF({
+      machine: {
+        reference: machine?.reference || '',
+        name: machine?.name || '',
+        serial_number: machine?.serial_number || '',
+        brand: machine?.brand,
+        model: machine?.model,
+        location: machine?.location,
+        cliente: machine?.cliente,
+      },
+      report: {
+        report_date: formData.report_date,
+        maintenance_type: formData.maintenance_type,
+        technician: formData.technician,
+        parts_changed: formData.parts_changed,
+        notes: formData.notes,
+        cost: formData.cost,
+      },
+      photos: photosPreview,
+      signatureData,
+      consecutivo,
+    })
   }
 
   const handleDownloadPDF = async () => {
@@ -471,6 +278,23 @@ export default function AddReport() {
       if (formData.photos.length > 0) {
         setUploading(true)
         photoUrls = await uploadPhotos()
+      }
+
+      let ownerSignatureUrl: string | null = null
+      if (signatureData) {
+        const sigBlob = await (await fetch(signatureData)).blob()
+        const sigFileName = `${id}/${Date.now()}-firma.png`
+        const { error: sigError } = await supabase.storage
+          .from('machine-pdfs')
+          .upload(sigFileName, sigBlob)
+
+        if (sigError) throw sigError
+
+        const { data: { publicUrl: sigUrl } } = supabase.storage
+          .from('machine-pdfs')
+          .getPublicUrl(sigFileName)
+
+        ownerSignatureUrl = sigUrl
       }
 
       const reportData = {
@@ -501,7 +325,7 @@ export default function AddReport() {
 
       const { error: insertError } = await supabase
         .from('reports')
-        .insert([{ ...reportData, pdf_url: pdfUrl }])
+        .insert([{ ...reportData, pdf_url: pdfUrl, owner_signature_url: ownerSignatureUrl }])
 
       if (insertError) throw insertError
 
@@ -627,6 +451,58 @@ export default function AddReport() {
               className="input-field min-h-[100px]"
               placeholder="Notas adicionales del mantenimiento..."
             />
+          </div>
+
+          {/* Firma Digital */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Firma del Dueño</label>
+            <div style={{
+              border: '2px dashed var(--color-primary)',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              backgroundColor: '#ffffff'
+            }}>
+              <canvas
+                ref={canvasRef}
+                width={500}
+                height={120}
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+                style={{
+                  width: '100%',
+                  height: '120px',
+                  cursor: 'crosshair',
+                  display: 'block'
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+              <button
+                type="button"
+                onClick={clearSignature}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  backgroundColor: 'transparent',
+                  color: 'var(--color-text-muted)',
+                  border: '1px solid var(--color-primary)',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Limpiar Firma
+              </button>
+              {signatureData && (
+                <span style={{ fontSize: '12px', color: '#16a34a', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  ✓ Firma capturada
+                </span>
+              )}
+            </div>
           </div>
 
           <div>

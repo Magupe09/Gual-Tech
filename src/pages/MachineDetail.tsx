@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Plus, FileText, Calendar, User, Package, Trash2, Download, CheckCircle, AlertCircle, Filter } from 'lucide-react'
+import { ArrowLeft, Plus, FileText, Calendar, User, Package, Trash2, Download, CheckCircle, AlertCircle, Filter, Edit3, Loader } from 'lucide-react'
 import { supabase } from '../services/supabase'
 import { deleteMachine, deleteReport } from '../services/database'
 import { sendReportEmail } from '../services/email'
 import { Machine, Report } from '../types'
 import ConfirmModal from '../components/ConfirmModal'
 import ActionMenu from '../components/ActionMenu'
+import { generateReportPDF, urlToBase64 } from '../services/pdfGenerator'
 
 export default function MachineDetail() {
   const { id } = useParams<{ id: string }>()
@@ -26,9 +27,11 @@ export default function MachineDetail() {
   const [pinInput, setPinInput] = useState('')
   const [pinError, setPinError] = useState('')
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null)
+  const [deletingType, setDeletingType] = useState<'report' | 'machine'>('report')
 
   // Estados para envío de email
   const [sendingReportId, setSendingReportId] = useState<string | null>(null)
+  const [downloadingReportId, setDownloadingReportId] = useState<string | null>(null)
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
   // Auto-ocultar notificación después de 5 segundos
@@ -113,12 +116,78 @@ export default function MachineDetail() {
   }
 
   /**
-   * DESCARGAR PDF INFORME
-   * Abre el PDF en nueva pestaña
+   * DESCARGAR PDF INFORME (regenerado con formato actual)
+   * Carga fotos y firma desde Storage, regenera el PDF con el layout nuevo
    */
-  const handleDownloadReport = (report: Report) => {
-    if (report.pdf_url) {
-      window.open(report.pdf_url, '_blank')
+  const handleDownloadReport = async (report: Report) => {
+    if (!machine) return
+
+    setDownloadingReportId(report.id)
+    setNotification(null)
+
+    try {
+      // 1. Cargar fotos como base64 desde Storage
+      const photoBase64s: string[] = []
+      if (report.photos && report.photos.length > 0) {
+        for (const url of report.photos) {
+          try {
+            const b64 = await urlToBase64(url)
+            photoBase64s.push(b64)
+          } catch {
+            // skip broken photo links
+          }
+        }
+      }
+
+      // 2. Cargar firma como base64 si existe
+      let signatureB64: string | null = null
+      if (report.owner_signature_url) {
+        try {
+          signatureB64 = await urlToBase64(report.owner_signature_url)
+        } catch {
+          // skip broken signature link
+        }
+      }
+
+      // 3. Calcular consecutivo (posición ordenada por fecha ascendente)
+      const sortedByDate = [...reports]
+        .filter(r => r.report_date)
+        .sort((a, b) => new Date(a.report_date).getTime() - new Date(b.report_date).getTime())
+      const idx = sortedByDate.findIndex(r => r.id === report.id)
+      const consecutivo = String(idx >= 0 ? idx + 1 : reports.length).padStart(3, '0')
+
+      // 4. Generar PDF con el nuevo formato
+      const doc = await generateReportPDF({
+        machine: {
+          reference: machine.reference,
+          name: machine.name,
+          serial_number: machine.serial_number,
+          brand: machine.brand,
+          model: machine.model,
+          location: machine.location,
+          cliente: machine.cliente,
+        },
+        report: {
+          report_date: report.report_date,
+          maintenance_type: report.maintenance_type,
+          technician: report.technician,
+          parts_changed: report.parts_changed || [],
+          notes: report.notes || '',
+          cost: report.cost || 0,
+        },
+        photos: photoBase64s,
+        signatureData: signatureB64,
+        consecutivo,
+      })
+
+      // 5. Descargar
+      const fileName = `informe-${machine.reference}-${report.report_date}.pdf`
+      doc.save(fileName)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al generar el PDF'
+      setNotification({ type: 'error', message })
+    } finally {
+      setDownloadingReportId(null)
     }
   }
 
@@ -164,10 +233,11 @@ export default function MachineDetail() {
 
   /**
    * ABRIR MODAL PIN
-   * Prepara el modal de PIN para eliminar informe
+   * Para eliminar informe (type='report') o máquina (type='machine')
    */
-  const openPinModal = (reportId: string) => {
-    setDeletingReportId(reportId)
+  const openPinModal = (reportId?: string, type: 'report' | 'machine' = 'report') => {
+    setDeletingType(type)
+    setDeletingReportId(reportId || null)
     setPinInput('')
     setPinError('')
     setShowPinModal(true)
@@ -178,23 +248,32 @@ export default function MachineDetail() {
 
   /**
    * ELIMINAR CON PIN
-   * Valida el PIN de 4 dígitos antes de eliminar
+   * Valida el PIN de 4 dígitos. Para informes: elimina directo. Para máquinas: muestra confirmación.
    */
   const handleDeleteWithPin = async () => {
     if (pinInput !== DELETE_PIN) {
       setPinError('Código incorrecto')
       return
     }
+
+    // Cerrar modal PIN
+    setShowPinModal(false)
+    setPinInput('')
+    setPinError('')
+
+    if (deletingType === 'machine') {
+      // Para máquinas: mostrar confirmación después del PIN correcto
+      setShowDeleteMachineModal(true)
+      return
+    }
+
+    // Para informes: eliminar directo
     if (!deletingReportId) return
 
     setIsDeleting(true)
     try {
       await deleteReport(deletingReportId)
-      setShowPinModal(false)
       setDeletingReportId(null)
-      setPinInput('')
-      setPinError('')
-      
       setReports(reports.filter(r => r.id !== deletingReportId))
     } catch (error) {
       console.error('Error eliminando informe:', error)
@@ -317,8 +396,25 @@ export default function MachineDetail() {
               <Plus size={20} />
               Nuevo Informe
             </Link>
+            <Link to={`/machine/${id}/edit`} style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px', 
+                padding: '10px 20px', 
+                backgroundColor: '#7B5CC9', 
+                color: '#ffffff', 
+                border: 'none', 
+                borderRadius: '8px', 
+                fontWeight: '600', 
+                cursor: 'pointer',
+                textDecoration: 'none',
+                transition: 'all 0.2s'
+              }}>
+              <Edit3 size={20} />
+              Editar
+            </Link>
             <button 
-              onClick={() => setShowDeleteMachineModal(true)}
+              onClick={() => openPinModal(undefined, 'machine')}
               style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -458,6 +554,7 @@ export default function MachineDetail() {
                         onDownload={() => handleDownloadReport(report)}
                         onDelete={() => openPinModal(report.id)}
                         isSending={sendingReportId === report.id}
+                        isDownloading={downloadingReportId === report.id}
                       />
                     </div>
                   </div>
@@ -573,7 +670,9 @@ export default function MachineDetail() {
               Confirmar Eliminación
             </h2>
             <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', marginBottom: '24px', lineHeight: '1.5' }}>
-              Ingresá el código de seguridad para eliminar el informe
+              {deletingType === 'machine'
+                ? 'Ingresá el código de seguridad para eliminar la máquina'
+                : 'Ingresá el código de seguridad para eliminar el informe'}
             </p>
 
             <input

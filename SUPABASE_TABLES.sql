@@ -33,6 +33,7 @@ CREATE TABLE public.reports (
   cost DECIMAL(10,2) DEFAULT 0,
   photos TEXT[] DEFAULT '{}',
   pdf_url TEXT,
+  owner_signature_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

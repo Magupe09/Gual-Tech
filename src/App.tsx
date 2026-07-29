@@ -41,6 +41,14 @@ function App() {
         } 
       />
       <Route 
+        path="/machine/:id/edit" 
+        element={
+          <ProtectedRoute>
+            <Layout><AddMachine /></Layout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
         path="/machine/:id/add-report" 
         element={
           <ProtectedRoute>

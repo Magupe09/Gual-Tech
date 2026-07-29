@@ -1,12 +1,15 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { supabase } from '../services/supabase'
 import { MachineFormData } from '../types'
 
 export default function AddMachine() {
+  const { id } = useParams<{ id?: string }>()
+  const isEditMode = Boolean(id)
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
+  const [fetching, setFetching] = useState(isEditMode)
   const [error, setError] = useState('')
   
   const [formData, setFormData] = useState<MachineFormData>({
@@ -22,6 +25,44 @@ export default function AddMachine() {
     telefono: ''
   })
 
+  // En modo edición: cargar datos de la máquina
+  useEffect(() => {
+    if (!id) return
+
+    const fetchMachine = async () => {
+      try {
+        const { data, error: fetchError } = await supabase
+          .from('machines')
+          .select('*')
+          .eq('id', id)
+          .single()
+
+        if (fetchError) throw fetchError
+        if (data) {
+          setFormData({
+            reference: data.reference || '',
+            serial_number: data.serial_number || '',
+            name: data.name || '',
+            brand: data.brand || '',
+            model: data.model || '',
+            location: data.location || '',
+            cliente: data.cliente || '',
+            nit: data.nit || '',
+            email: data.email || '',
+            telefono: data.telefono || ''
+          })
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Error al cargar la máquina'
+        setError(msg)
+      } finally {
+        setFetching(false)
+      }
+    }
+
+    fetchMachine()
+  }, [id])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -36,21 +77,47 @@ export default function AddMachine() {
     setError('')
 
     try {
-      const { data, error: supabaseError } = await supabase
-        .from('machines')
-        .insert([formData])
-        .select()
-        .single()
+      if (isEditMode && id) {
+        // --- MODO EDICIÓN ---
+        const { data, error: supabaseError } = await supabase
+          .from('machines')
+          .update(formData)
+          .eq('id', id)
+          .select()
+          .single()
 
-      if (supabaseError) throw supabaseError
-      
-      navigate(`/machine/${data.id}`)
+        if (supabaseError) throw supabaseError
+        navigate(`/machine/${data.id}`)
+      } else {
+        // --- MODO CREACIÓN ---
+        const { data, error: supabaseError } = await supabase
+          .from('machines')
+          .insert([formData])
+          .select()
+          .single()
+
+        if (supabaseError) throw supabaseError
+        navigate(`/machine/${data.id}`)
+      }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al guardar la máquina'
-      setError(errorMessage)
+      const rawMessage = err instanceof Error ? err.message : ''
+      // Detectar violación de unique constraint en serial_number
+      if (rawMessage.includes('machines_serial_number_key') || rawMessage.includes('duplicate key')) {
+        setError('Este número de serie ya está registrado. Usá uno diferente.')
+      } else {
+        setError(rawMessage || 'Error al guardar la máquina')
+      }
     } finally {
       setLoading(false)
     }
+  }
+
+  if (fetching) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+        <div style={{ color: 'var(--color-primary)', fontSize: '20px' }}>Cargando...</div>
+      </div>
+    )
   }
 
   return (
@@ -61,7 +128,9 @@ export default function AddMachine() {
           <button onClick={() => navigate(-1)} className="btn-secondary p-2">
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-2xl font-bold text-white">Agregar Máquina</h1>
+          <h1 className="text-2xl font-bold text-white">
+            {isEditMode ? 'Editar Máquina' : 'Agregar Máquina'}
+          </h1>
         </div>
 
         {/* Form */}
@@ -213,7 +282,7 @@ export default function AddMachine() {
             </button>
             <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2 px-6 py-2">
               <Save size={18} />
-              {loading ? 'Guardando...' : 'Guardar Máquina'}
+              {loading ? 'Guardando...' : isEditMode ? 'Guardar Cambios' : 'Guardar Máquina'}
             </button>
           </div>
         </form>

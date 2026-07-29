@@ -37,6 +37,7 @@ export interface Report {
   cost: number
   photos: string[]
   pdf_url?: string
+  owner_signature_url?: string
   created_at: string
 }
 
@@ -63,6 +64,7 @@ export interface ReportFormData {
   notes: string
   cost: number
   photos: File[]
+  owner_signature?: string  // base64 de la firma dibujada
 }
 
 // Respuesta de usuario de Supabase

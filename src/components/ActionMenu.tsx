@@ -8,6 +8,8 @@ interface ActionMenuProps {
   onEmail?: () => void
   /** Indica si se está enviando el email (muestra spinner) */
   isSending?: boolean
+  /** Indica si se está descargando el PDF (muestra spinner) */
+  isDownloading?: boolean
 }
 
 /**
@@ -20,8 +22,9 @@ interface ActionMenuProps {
  * @param onDownload - Callback para descargar PDF
  * @param onEmail - Callback para enviar por email
  * @param isSending - Muestra spinner en botón de email mientras envía
+ * @param isDownloading - Muestra spinner en botón de descarga mientras genera PDF
  */
-export default function ActionMenu({ onEdit, onDelete, onDownload, onEmail, isSending }: ActionMenuProps) {
+export default function ActionMenu({ onEdit, onDelete, onDownload, onEmail, isSending, isDownloading }: ActionMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -130,9 +133,12 @@ export default function ActionMenu({ onEdit, onDelete, onDownload, onEmail, isSe
           {onDownload && (
             <button
               onClick={() => {
-                onDownload()
-                setIsOpen(false)
+                if (!isDownloading) {
+                  onDownload()
+                  setIsOpen(false)
+                }
               }}
+              disabled={isDownloading}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -141,22 +147,26 @@ export default function ActionMenu({ onEdit, onDelete, onDownload, onEmail, isSe
                 padding: '12px 16px',
                 backgroundColor: 'transparent',
                 border: 'none',
-                cursor: 'pointer',
-                color: '#532D8C',
+                cursor: isDownloading ? 'wait' : 'pointer',
+                color: isDownloading ? '#999999' : '#532D8C',
                 fontSize: '14px',
                 fontWeight: '500',
                 borderBottom: onDelete ? '1px solid #f0f0f0' : 'none',
                 transition: 'background-color 0.2s'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#f5f5f5'
+                if (!isDownloading) e.currentTarget.style.backgroundColor = '#f5f5f5'
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent'
               }}
             >
-              <Download size={16} />
-              Descargar PDF
+              {isDownloading ? (
+                <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+              ) : (
+                <Download size={16} />
+              )}
+              {isDownloading ? 'Generando...' : 'Descargar PDF'}
             </button>
           )}
 
