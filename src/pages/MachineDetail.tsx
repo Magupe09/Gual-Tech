@@ -166,6 +166,7 @@ export default function MachineDetail() {
           model: machine.model,
           location: machine.location,
           cliente: machine.cliente,
+          status: machine.status,
         },
         report: {
           report_date: report.report_date,

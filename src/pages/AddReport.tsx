@@ -271,6 +271,7 @@ export default function AddReport() {
         model: machine?.model,
         location: machine?.location,
         cliente: machine?.cliente,
+        status: machine?.status,
       },
       report: {
         report_date: formData.report_date,
