@@ -23,7 +23,7 @@ export default function Layout({ children }: LayoutProps) {
       
       if (width < 768) {
         // Mobile
-        setDimensions({ width: '100vw', height: '100vh', padding: '16px', radius: '0' })
+        setDimensions({ width: '100%', height: 'calc(100vh - 32px)', padding: '16px', radius: '16px' })
       } else if (width < 1024) {
         // Tablet
         setDimensions({ width: '95vw', height: '90vh', padding: '20px', radius: '12px' })
