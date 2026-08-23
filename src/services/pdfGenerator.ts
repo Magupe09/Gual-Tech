@@ -136,35 +136,19 @@ export async function generateReportPDF(params: GeneratePdfParams): Promise<jsPD
     y += 13
   }
 
-  // Carga del logo (si existe)
-  let logoB64: string | null = null
-  try {
-    logoB64 = await urlToBase64('/logojavi.PNG')
-  } catch {
-    logoB64 = null
-  }
-
   // ══════════════ CABECERA ══════════════
   doc.setFillColor(...PURPLE)
   doc.roundedRect(MARGIN, y, CW, 26, 4, 4, 'F')
 
-  if (logoB64) {
-    const lsz = 19
-    try {
-      doc.addImage(logoB64, 'PNG', MARGIN + 6, y + 3.5, lsz, lsz)
-    } catch {}
-  }
-
-  const titleX = logoB64 ? MARGIN + 30 : MARGIN + 10
   doc.setFont(FONT, BOLD)
   doc.setFontSize(15)
   doc.setTextColor(...WHITE)
-  doc.text('REPORTE DE MANTENIMIENTO', titleX, y + 11)
+  doc.text('REPORTE DE MANTENIMIENTO', MARGIN + CW / 2, y + 11, { align: 'center' })
 
   doc.setFont(FONT, NORMAL)
   doc.setFontSize(8)
   doc.setTextColor(224, 216, 242)
-  doc.text(`N° ${consecutivo}   ·   Generado: ${new Date().toLocaleDateString('es-ES')}`, titleX, y + 18)
+  doc.text(`N° ${consecutivo}   ·   Generado: ${new Date().toLocaleDateString('es-ES')}`, MARGIN + CW / 2, y + 18, { align: 'center' })
   y += 26 + 10
 
   // ══════════════ INFORMACIÓN DEL EQUIPO ══════════════
