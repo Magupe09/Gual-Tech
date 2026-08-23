@@ -125,7 +125,7 @@ export default function AddMachine() {
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => navigate(-1)} className="btn-secondary p-2">
+          <button onClick={() => navigate(-1)} className="btn-secondary btn-icon">
             <ArrowLeft size={20} />
           </button>
           <h1 className="text-2xl font-bold text-white">

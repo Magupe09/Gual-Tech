@@ -177,3 +177,24 @@ body {
   background-color: var(--color-surface);
   color: var(--color-text);
 }
+
+/* ============================================
+   Botones — tamaño reducido en móvil
+   ============================================ */
+@media (max-width: 767px) {
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Botón de solo icono (flechas de navegación): tamaño fijo.
+   Se define DESPUÉS del media query para que su padding
+   no sea pisado por el de los botones de texto en móvil. */
+.btn-icon {
+  padding: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
