@@ -116,7 +116,7 @@ export default function Login() {
             style={{ 
               width: '100%', 
               padding: '12px 24px', 
-              backgroundColor: '#532D8C', 
+              backgroundColor: '#16a34a', // TEMPORAL: verde para verificar deploy (revertir)
               color: '#ffffff', 
               border: 'none', 
               borderRadius: '8px', 
