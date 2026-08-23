@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { Loader } from 'lucide-react'
 import { login } from '../services/auth'
 
 // Custom hook for responsive designs
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(false)
-  
+
   useEffect(() => {
     const media = window.matchMedia(query)
     if (media.matches !== matches) {
@@ -15,7 +16,7 @@ function useMediaQuery(query: string) {
     media.addEventListener('change', listener)
     return () => media.removeEventListener('change', listener)
   }, [matches, query])
-  
+
   return matches
 }
 
@@ -25,7 +26,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
-  
+
   // Responsive
   const isMobile = useMediaQuery('(max-width: 767px)')
 
@@ -46,117 +47,146 @@ export default function Login() {
   }
 
   return (
-    <div 
+    <div
       style={{
+        position: 'relative',
         minHeight: '100vh',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         padding: isMobile ? '16px' : '24px',
-        backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(/logojavi.PNG)`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
+        overflow: 'hidden',
       }}
     >
-      <div style={{ 
-        width: '100%', 
-        maxWidth: isMobile ? '100%' : '480px', 
-        backgroundColor: '#ffffff', 
-        borderRadius: isMobile ? '0' : '12px', 
-        padding: isMobile ? '24px' : '32px', 
-        boxShadow: isMobile ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.15)' 
-      }}>
+      {/* Fondo aurora */}
+      <div className="login-bg" />
+      <div
+        className="login-blob"
+        style={{ width: '420px', height: '420px', background: '#7b5cc9', top: '-80px', left: '-60px' }}
+      />
+      <div
+        className="login-blob"
+        style={{ width: '360px', height: '360px', background: '#9d8ad4', bottom: '-60px', right: '-40px', animationDelay: '-6s' }}
+      />
+      <div
+        className="login-blob"
+        style={{ width: '280px', height: '280px', background: '#4c1d95', top: '42%', left: '56%', animationDelay: '-12s' }}
+      />
+
+      {/* Tarjeta glassmorphism */}
+      <div
+        className="glass-card"
+        style={{
+          position: 'relative',
+          zIndex: 2,
+          width: '100%',
+          maxWidth: '420px',
+          borderRadius: '20px',
+          padding: isMobile ? '28px' : '40px',
+        }}
+      >
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: isMobile ? '24px' : '32px' }}>
-          <img 
-            src="/logojavi.PNG" 
-            alt="GUALTECH" 
-            style={{ width: isMobile ? '80px' : '128px', height: isMobile ? '80px' : '128px', objectFit: 'contain', marginBottom: '16px' }}
+        <div className="animate-fade-in-up" style={{ textAlign: 'center', marginBottom: '28px' }}>
+          <img
+            src="/logojavi.PNG"
+            alt="GUALTECH"
+            className="logo-float"
+            style={{
+              width: isMobile ? '72px' : '96px',
+              height: isMobile ? '72px' : '96px',
+              objectFit: 'cover',
+              borderRadius: '50%',
+              marginBottom: '16px',
+              boxShadow: '0 10px 40px rgba(123, 92, 201, 0.55)',
+            }}
           />
-          <h1 style={{ color: '#532D8C', fontSize: isMobile ? '20px' : '24px', fontWeight: 'bold' }}>GUALTECH</h1>
-          <p style={{ color: '#7B5CC9', fontSize: isMobile ? '12px' : '14px', marginTop: '8px' }}>Gestión de Máquinas</p>
+          <h1 style={{ color: '#ffffff', fontSize: isMobile ? '20px' : '24px', fontWeight: 'bold' }}>GUALTECH</h1>
+          <p style={{ color: '#c4b5fd', fontSize: isMobile ? '12px' : '14px', marginTop: '6px' }}>Gestión de Máquinas</p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form
+          onSubmit={handleLogin}
+          className="animate-fade-in-up"
+          style={{ display: 'flex', flexDirection: 'column', gap: '16px', animationDelay: '0.15s' }}
+        >
           <div>
-            <label style={{ display: 'block', fontSize: isMobile ? '13px' : '14px', fontWeight: '500', marginBottom: '8px', color: '#532D8C' }}>Email</label>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '8px', color: '#e9d5ff' }}>Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #532D8C', backgroundColor: '#ffffff', color: '#1a1a1a', fontSize: isMobile ? '14px' : '16px' }}
+              className="login-input"
               placeholder="tu@email.com"
               required
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: isMobile ? '13px' : '14px', fontWeight: '500', marginBottom: '8px', color: '#532D8C' }}>Contraseña</label>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '8px', color: '#e9d5ff' }}>Contraseña</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #532D8C', backgroundColor: '#ffffff', color: '#1a1a1a', fontSize: isMobile ? '14px' : '16px' }}
+              className="login-input"
               placeholder="••••••••"
               required
             />
           </div>
 
           {error && (
-            <div style={{ padding: '12px', backgroundColor: '#fee2e2', border: '1px solid #ef4444', borderRadius: '8px', color: '#dc2626', fontSize: isMobile ? '12px' : '14px' }}>
+            <div
+              style={{
+                padding: '12px',
+                backgroundColor: 'rgba(239, 68, 68, 0.18)',
+                border: '1px solid rgba(248, 113, 113, 0.5)',
+                borderRadius: '10px',
+                color: '#fecaca',
+                fontSize: '13px',
+              }}
+            >
               {error}
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ 
-              width: '100%', 
-              padding: '12px 24px', 
-              backgroundColor: '#532D8C', 
-              color: '#ffffff', 
-              border: 'none', 
-              borderRadius: '8px', 
-              fontWeight: '600', 
-              fontSize: isMobile ? '14px' : '16px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1
-            }}
-          >
-            {loading ? 'Iniciando...' : 'Iniciar Sesión'}
+          <button type="submit" disabled={loading} className="login-btn">
+            {loading ? (
+              <>
+                <Loader size={18} className="animate-spin" />
+                Iniciando...
+              </>
+            ) : (
+              'Iniciar Sesión'
+            )}
           </button>
         </form>
 
         {/* Signup Link */}
-        <div style={{ marginTop: '24px', textAlign: 'center', borderTop: '1px solid #e5e7eb', paddingTop: '24px' }}>
-          <p style={{ color: '#666', fontSize: isMobile ? '13px' : '14px', marginBottom: '12px' }}>
-            ¿No tenés cuenta?
-          </p>
-          <Link 
-            to="/signup" 
-            style={{ 
+        <div
+          className="animate-fade-in-up"
+          style={{ marginTop: '24px', textAlign: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.15)', paddingTop: '20px', animationDelay: '0.3s' }}
+        >
+          <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '13px', marginBottom: '12px' }}>¿No tenés cuenta?</p>
+          <Link
+            to="/signup"
+            style={{
               display: 'inline-block',
-              padding: '10px 20px', 
-              backgroundColor: '#f0e6ff', 
-              color: '#532D8C', 
-              border: '2px solid #532D8C', 
-              borderRadius: '8px', 
-              fontWeight: '600', 
-              fontSize: isMobile ? '14px' : '16px',
+              padding: '10px 20px',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              color: '#ffffff',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '10px',
+              fontWeight: '600',
+              fontSize: '14px',
               textDecoration: 'none',
               cursor: 'pointer',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#532D8C'
-              e.currentTarget.style.color = '#ffffff'
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.18)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#f0e6ff'
-              e.currentTarget.style.color = '#532D8C'
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)'
             }}
           >
             Crear Cuenta
