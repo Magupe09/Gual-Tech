@@ -44,6 +44,25 @@ export default function AddReport() {
     if (id) fetchMachine()
   }, [id])
 
+  // Evita que la página se escrolee mientras el usuario firma en el celular.
+  // React registra touchmove como listener pasivo, así que e.preventDefault()
+  // en los handlers sintéticos no bloquea el scroll. Por eso agregamos un
+  // listener nativo con passive: false directo sobre el canvas.
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const preventScroll = (e: TouchEvent) => {
+      e.preventDefault()
+    }
+
+    canvas.addEventListener('touchmove', preventScroll, { passive: false })
+
+    return () => {
+      canvas.removeEventListener('touchmove', preventScroll)
+    }
+  }, [])
+
   const fetchMachine = async () => {
     try {
       const { data, error } = await supabase
@@ -477,7 +496,11 @@ export default function AddReport() {
                   width: '100%',
                   height: '120px',
                   cursor: 'crosshair',
-                  display: 'block'
+                  display: 'block',
+                  touchAction: 'none',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  WebkitTouchCallout: 'none'
                 }}
               />
             </div>
