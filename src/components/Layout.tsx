@@ -40,13 +40,11 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div style={{ 
-      backgroundColor: 'var(--color-bg-dark)', 
       minHeight: '100vh',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      padding: dimensions.padding,
-      transition: 'background-color 0.35s ease'
+      padding: dimensions.padding
     }}>
       <ThemeToggle />
 
