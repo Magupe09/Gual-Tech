@@ -90,7 +90,7 @@ export default function Dashboard() {
         gap: isMobile ? '12px' : '0'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img src="/logojavi.PNG" alt="GUALTECH" style={{ width: isMobile ? '36px' : '48px', height: isMobile ? '36px' : '48px', objectFit: 'contain' }} />
+          <img src="/logojavi.PNG" alt="GUALTECH" style={{ width: isMobile ? '36px' : '48px', height: isMobile ? '36px' : '48px', objectFit: 'contain', borderRadius: '50%' }} />
           <div>
             <h1 style={{ color: '#532D8C', fontSize: isMobile ? '18px' : '24px', fontWeight: 'bold' }}>GUALTECH</h1>
             <p style={{ color: '#666666', fontSize: isMobile ? '12px' : '14px' }}>Gestión de Máquinas</p>

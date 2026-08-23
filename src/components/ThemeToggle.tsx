@@ -5,7 +5,7 @@ import { useThemeStore } from '../stores/themeStore'
  * ThemeToggle
  *
  * Botón sol/luna que alterna entre modo claro y oscuro.
- * Posición: esquina superior izquierda (se usa dentro del Layout).
+ * Posición: esquina superior derecha (se usa dentro del Layout).
  */
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useThemeStore()
@@ -17,7 +17,7 @@ export default function ThemeToggle() {
       style={{
         position: 'fixed',
         top: '20px',
-        left: '20px',
+        right: '20px',
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
