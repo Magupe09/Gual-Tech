@@ -1,4 +1,5 @@
 import { ReactNode, useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useThemeStore } from '../stores/themeStore'
 import ThemeToggle from './ThemeToggle'
 
@@ -9,6 +10,7 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const [dimensions, setDimensions] = useState({ width: '90vw', height: '90vh', padding: '24px', radius: '12px' })
   const theme = useThemeStore((s) => s.theme)
+  const location = useLocation()
 
   // Sincronizar atributo data-theme en <html> para que CSS responda
   useEffect(() => {
@@ -62,7 +64,9 @@ export default function Layout({ children }: LayoutProps) {
         transition: 'background-color 0.35s ease, box-shadow 0.35s ease'
       }}>
         <main style={{ flex: 1, padding: dimensions.padding, overflowY: 'auto' }}>
-          {children}
+          <div key={location.pathname} className="animate-page-enter">
+            {children}
+          </div>
         </main>
       </div>
     </div>
