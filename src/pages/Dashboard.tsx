@@ -147,10 +147,11 @@ export default function Dashboard() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {filteredMachines.map(machine => (
+            {filteredMachines.map((machine, i) => (
               <Link
                 key={machine.id}
                 to={`/machine/${machine.id}`}
+                className="animate-fade-in-up"
                 style={{ 
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -160,7 +161,8 @@ export default function Dashboard() {
                   border: '1px solid #532D8C',
                   borderRadius: '8px',
                   flexDirection: isMobile ? 'column' : 'row',
-                  gap: isMobile ? '8px' : '0'
+                  gap: isMobile ? '8px' : '0',
+                  animationDelay: `${Math.min(i * 60, 400)}ms`
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

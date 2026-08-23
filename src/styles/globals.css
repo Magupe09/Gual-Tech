@@ -198,3 +198,47 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+/* ============================================
+   Micro-interacciones y animaciones
+   ============================================ */
+
+/* Feedback táctil: el botón se "hunde" al tocarlo */
+.btn-primary:active,
+.btn-secondary:active,
+.btn-icon:active {
+  transform: scale(0.96);
+}
+
+/* Entrada suave: fade + slide up */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.35s ease both;
+}
+
+/* Las tarjetas entran con fade-in-up */
+.card {
+  animation: fadeInUp 0.4s ease both;
+}
+
+/* Respetar usuarios que prefieren menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .animate-fade-in-up,
+  .btn-primary,
+  .btn-secondary,
+  .btn-icon {
+    animation: none;
+    transition: none;
+  }
+}

@@ -271,10 +271,10 @@ export default function AddMachine() {
           <div style={{
             display: 'flex',
             justifyContent: 'center',
-            gap: '16px',
-            paddingTop: '48px',
-            paddingBottom: '24px',
-            marginTop: '48px',
+            gap: '12px',
+            paddingTop: '24px',
+            paddingBottom: '16px',
+            marginTop: '32px',
             borderTop: '1px solid var(--color-primary)'
           }}>
             <button type="button" onClick={() => navigate(-1)} className="btn-secondary px-6 py-2">

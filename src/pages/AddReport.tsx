@@ -579,10 +579,10 @@ export default function AddReport() {
           <div style={{
             display: 'flex',
             justifyContent: 'center',
-            gap: '16px',
-            paddingTop: '48px',
-            paddingBottom: '24px',
-            marginTop: '48px',
+            gap: '12px',
+            paddingTop: '24px',
+            paddingBottom: '16px',
+            marginTop: '32px',
             borderTop: '1px solid var(--color-primary)'
           }}>
             <button type="button" onClick={handleDownloadPDF} className="btn-secondary flex items-center gap-2">

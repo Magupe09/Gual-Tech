@@ -391,8 +391,8 @@ export default function MachineDetail() {
               <p style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>{machine.name}</p>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <Link to={`/machine/${id}/add-report`} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', backgroundColor: '#532D8C', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: '600', textDecoration: 'none' }}>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <Link to={`/machine/${id}/add-report`} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', fontSize: '14px', backgroundColor: '#532D8C', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: '600', textDecoration: 'none' }}>
               <Plus size={20} />
               Nuevo Informe
             </Link>
@@ -400,7 +400,8 @@ export default function MachineDetail() {
                 display: 'flex', 
                 alignItems: 'center', 
                 gap: '8px', 
-                padding: '10px 20px', 
+                padding: '8px 14px', 
+                fontSize: '14px', 
                 backgroundColor: '#7B5CC9', 
                 color: '#ffffff', 
                 border: 'none', 
@@ -419,7 +420,8 @@ export default function MachineDetail() {
                 display: 'flex', 
                 alignItems: 'center', 
                 gap: '8px', 
-                padding: '10px 20px', 
+                padding: '8px 14px', 
+                fontSize: '14px', 
                 backgroundColor: '#dc2626', 
                 color: '#ffffff', 
                 border: 'none', 
@@ -658,9 +660,11 @@ export default function MachineDetail() {
             style={{
               backgroundColor: '#ffffff',
               borderRadius: '12px',
-              padding: '32px',
+              padding: '24px',
               maxWidth: '380px',
               width: '90%',
+              maxHeight: '85vh',
+              overflowY: 'auto',
               boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
               zIndex: 1000,
               textAlign: 'center'
